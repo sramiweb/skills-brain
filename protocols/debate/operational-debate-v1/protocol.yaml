@@ -1,0 +1,36 @@
+schema_version: "1.0"
+id: operational-debate-v1
+version: "1.0.0"
+type: deliberation
+purpose: "Production incidents, remediation, rollback and operational changes"
+roles:
+  - sre-expert
+  - domain-expert
+  - risk-reviewer
+  - judge
+rounds:
+  - id: independent-analysis
+    blind: true
+  - id: cross-examination
+    blind: false
+  - id: judgement
+    blind: false
+rules:
+  evidence_required: true
+  preserve_dissent: true
+  majority_vote_allowed: false
+  proposer_may_judge: false
+  security_veto_overrides: true
+  pre_mortem: false
+limits:
+  max_rounds: 2
+  max_participants: 4
+verdicts:
+  - support
+  - support_with_conditions
+  - reject
+  - insufficient_evidence
+  - escalate
+human_approval:
+  default: conditional
+  destructive_actions: required
