@@ -1,0 +1,39 @@
+# Skills Brain v2 - Skill Manifest
+schema_version: "2.0"
+id: "templates/template-deployment"
+name: "Template Deployment"
+version: "1.0.0"
+status: "active"
+description: "Template for deploying applications with verification"
+category: "templates"
+capabilities:
+  - "templates.deployment"
+  - "deployment.template"
+risk:
+  level: 2
+  description: "Template execution with user-defined risk"
+side_effects:
+  - "Generates deployment configurations"
+  - "May create cloud resources when executed"
+security:
+  data_class: "internal"
+  permissions:
+    - "read:files"
+    - "write:files"
+provenance:
+  author: "sramiweb"
+  created: "2026-09-01"
+  source: "migration-p0"
+relationships:
+  requires: []
+  optional: []
+  conflicts: []
+  extends: []
+  supersedes: []
+  composes: []
+  related:
+    - "agenticos/agenticos-deploy"
+evaluation:
+  quality_score: 0.0
+  tests_passed: 0
+  tests_total: 0
