@@ -1,102 +1,139 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/sramiweb/skills-brain/main/schemas/skill.schema.json",
-  "title": "Skills Brain Skill Manifest",
-  "description": "Schema for skill.yaml files in Skills Brain v2",
+  "title": "Skills Brain Skill Manifest v2.1",
+  "description": "Canonical strict schema for Skills Brain skill.yaml manifests. Runtime-specific bindings belong to AgenticOS, not to canonical skills.",
   "type": "object",
-  "required": ["schema_version", "id", "version", "status", "capabilities"],
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "version",
+    "status",
+    "description",
+    "capabilities",
+    "risk",
+    "side_effects",
+    "security",
+    "evaluation",
+    "ownership",
+    "provenance"
+  ],
   "properties": {
     "schema_version": {
-      "type": "string",
-      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
-      "description": "Version of the skill schema"
+      "const": "2.1"
     },
     "id": {
       "type": "string",
-      "pattern": "^[a-z0-9-]+$",
-      "description": "Unique skill identifier"
+      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
     },
+    "name": {"type": "string", "minLength": 1},
     "version": {
       "type": "string",
-      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
-      "description": "Skill version (semver)"
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
     },
     "status": {
       "type": "string",
-      "enum": ["draft", "review", "candidate", "approved", "active", "deprecated", "retired", "quarantined"],
-      "description": "Lifecycle status"
+      "enum": ["draft", "review", "candidate", "approved", "active", "deprecated", "retired", "quarantined"]
     },
+    "description": {"type": "string", "minLength": 1},
+    "category": {"type": "string", "pattern": "^[a-z0-9-]+$"},
     "capabilities": {
       "type": "array",
-      "items": {
-        "type": "string",
-        "pattern": "^[a-z0-9.\\-_]+$"
-      },
       "minItems": 1,
-      "description": "Capability ontology (e.g., postgres.diagnose)"
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"}
     },
-    "inputs": {
-      "type": "array",
-      "items": {"type": "string"}
-    },
-    "outputs": {
-      "type": "array",
-      "items": {"type": "string"}
-    },
-    "tools": {
+    "inputs": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "outputs": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "requirements": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "required": {"type": "array", "items": {"type": "string"}},
-        "optional": {"type": "array", "items": {"type": "string"}}
+        "tool_capabilities": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+          "uniqueItems": true
+        },
+        "skills": {
+          "type": "array",
+          "items": {"type": "string"},
+          "uniqueItems": true
+        }
       }
     },
-    "permissions": {
+    "risk": {
       "type": "object",
+      "additionalProperties": false,
+      "required": ["level"],
       "properties": {
-        "filesystem": {"type": "string", "enum": ["none", "read", "write"]},
-        "network": {"type": "string", "enum": ["none", "restricted", "full"]},
-        "database": {"type": "string", "enum": ["none", "read-only", "read-write"]},
-        "shell": {"type": "boolean"}
+        "level": {"type": "integer", "minimum": 0, "maximum": 4},
+        "description": {"type": "string"}
       }
     },
     "side_effects": {
       "type": "string",
       "enum": ["none", "local", "reversible", "external", "destructive"]
     },
-    "risk": {
-      "type": "object",
-      "properties": {
-        "level": {"type": "integer", "minimum": 0, "maximum": 5}
-      }
-    },
     "data_classes": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "allowed": {
           "type": "array",
-          "items": {"type": "string", "pattern": "^S[0-9]+$"}
+          "items": {"type": "string", "enum": ["S0", "S1", "S2", "S3"]},
+          "uniqueItems": true
         }
       }
     },
-    "dependencies": {
+    "security": {
       "type": "object",
+      "additionalProperties": false,
+      "required": ["network", "filesystem", "shell", "destructive_operations"],
       "properties": {
-        "skills": {
-          "type": "array",
-          "items": {"type": "string"}
+        "network": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["outbound"],
+          "properties": {"outbound": {"type": "boolean"}}
+        },
+        "filesystem": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["read", "write"],
+          "properties": {
+            "read": {"type": "boolean"},
+            "write": {"type": "boolean"}
+          }
+        },
+        "shell": {"type": "boolean"},
+        "destructive_operations": {"type": "boolean"},
+        "credentials": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "required": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+          }
         }
       }
     },
-    "conflicts": {
-      "type": "array",
-      "items": {"type": "string"}
-    },
-    "supersedes": {
-      "type": "array",
-      "items": {"type": "string"}
+    "relationships": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "requires": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "optional": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "conflicts": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "extends": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "supersedes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "composes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "related": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
     },
     "evaluation": {
       "type": "object",
+      "additionalProperties": false,
+      "required": ["golden_tasks", "minimum_score"],
       "properties": {
         "golden_tasks": {"type": "string", "enum": ["required", "optional", "none"]},
         "minimum_score": {"type": "number", "minimum": 0, "maximum": 1}
@@ -104,18 +141,21 @@
     },
     "ownership": {
       "type": "object",
-      "properties": {
-        "maintainer": {"type": "string"}
-      }
+      "additionalProperties": false,
+      "required": ["maintainer"],
+      "properties": {"maintainer": {"type": "string", "minLength": 1}}
     },
     "provenance": {
       "type": "object",
+      "additionalProperties": false,
       "required": ["origin"],
       "properties": {
         "origin": {"type": "string", "enum": ["skills-brain", "external"]},
         "author": {"type": "string"},
-        "imported_from": {"type": "string"},
-        "reviewed_by": {"type": "array", "items": {"type": "string"}},
+        "source_repository": {"type": "string"},
+        "source_commit": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+        "derived_from": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "license": {"type": "string"},
         "created_at": {"type": "string", "format": "date-time"},
         "last_review": {"type": "string", "format": "date-time"}
       }
@@ -124,40 +164,10 @@
       "type": "object",
       "additionalProperties": {"type": "string"}
     },
-    "security": {
-      "type": "object",
-      "properties": {
-        "network": {
-          "type": "object",
-          "properties": {
-            "outbound": {"type": "boolean"}
-          }
-        },
-        "filesystem": {
-          "type": "object",
-          "properties": {
-            "read": {"type": "boolean"},
-            "write": {"type": "boolean"}
-          }
-        },
-        "shell": {"type": "boolean"},
-        "credentials": {
-          "type": "object",
-          "properties": {
-            "required": {"type": "array", "items": {"type": "string"}}
-          }
-        },
-        "data": {
-          "type": "object",
-          "properties": {
-            "max_classification": {"type": "string", "pattern": "^S[0-9]+$"}
-          }
-        },
-        "destructive_operations": {"type": "boolean"}
-      }
-    },
     "idempotency": {
       "type": "object",
+      "additionalProperties": false,
+      "required": ["supported"],
       "properties": {
         "supported": {"type": "boolean"},
         "key_strategy": {"type": "string"}
@@ -165,6 +175,7 @@
     },
     "integrity": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "skill_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
         "manifest_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
