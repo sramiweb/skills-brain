@@ -1,0 +1,43 @@
+# Skills Brain v2 - Skill Manifest
+schema_version: "2.0"
+id: "agenticos/agenticos-agent-create"
+name: "Agenticos Agent Create"
+version: "1.0.0"
+status: "active"
+description: "Create and configure new AgenticOS agents"
+category: "agenticos"
+capabilities:
+  - "agenticos.agent-create"
+  - "agent.creation"
+  - "configuration.agent"
+risk:
+  level: 3
+  description: "Creates new agents with permissions"
+side_effects:
+  - "Creates new agent instances"
+  - "Configures agent permissions"
+  - "Registers agents with orchestrator"
+security:
+  data_class: "internal"
+  permissions:
+    - "read:files"
+    - "write:files"
+    - "execute:commands"
+    - "create:agents"
+provenance:
+  author: "sramiweb"
+  created: "2026-09-01"
+  source: "migration-p0"
+relationships:
+  requires: []
+  optional:
+    - "agenticos/agenticos-agent-audit"
+  conflicts: []
+  extends: []
+  supersedes: []
+  composes: []
+  related: []
+evaluation:
+  quality_score: 0.0
+  tests_passed: 0
+  tests_total: 0
