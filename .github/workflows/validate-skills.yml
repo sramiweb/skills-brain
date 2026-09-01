@@ -1,0 +1,43 @@
+name: Validate Skills
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate SKILL.md files
+        run: |
+          echo "Checking all SKILL.md files have required sections..."
+          for file in $(find . -name "SKILL.md"); do
+            echo "Validating $file"
+            grep -q "^name:" "$file" || (echo "Missing name in $file" && exit 1)
+            grep -q "^description:" "$file" || (echo "Missing description in $file" && exit 1)
+            grep -q "^license:" "$file" || (echo "Missing license in $file" && exit 1)
+            grep -q "^## Purpose" "$file" || (echo "Missing Purpose in $file" && exit 1)
+            grep -q "^## Workflow" "$file" || (echo "Missing Workflow in $file" && exit 1)
+            grep -q "^## Examples" "$file" || (echo "Missing Examples in $file" && exit 1)
+          done
+          echo "All SKILL.md files are valid!"
+
+      - name: Check YAML frontmatter
+        run: |
+          echo "Validating YAML frontmatter syntax..."
+          for file in $(find . -name "SKILL.md"); do
+            head -n 15 "$file" | grep -q "^---$" || (echo "Invalid frontmatter in $file" && exit 1)
+          done
+          echo "YAML frontmatter OK!"
+
+      - name: Verify directory structure
+        run: |
+          echo "Checking directory structure..."
+          test -d "templates" || (echo "Missing templates/" && exit 1)
+          test -d "agenticos" || (echo "Missing agenticos/" && exit 1)
+          test -d "services" || (echo "Missing services/" && exit 1)
+          echo "Structure OK!"
