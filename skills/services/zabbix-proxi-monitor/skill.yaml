@@ -1,0 +1,39 @@
+# Skills Brain v2 - Skill Manifest
+schema_version: "2.0"
+id: "services/zabbix-proxi-monitor"
+name: "Zabbix Proxi Monitor"
+version: "1.0.0"
+status: "active"
+description: "Monitor and diagnose Zabbix proxy health"
+category: "services"
+capabilities:
+  - "zabbix.proxy.diagnose"
+  - "monitoring.health"
+risk:
+  level: 2
+  description: "Read-only monitoring with diagnostic commands"
+side_effects:
+  - "Executes diagnostic commands"
+  - "Generates monitoring reports"
+security:
+  data_class: "internal"
+  permissions:
+    - "read:files"
+    - "execute:commands"
+    - "read:monitoring"
+provenance:
+  author: "sramiweb"
+  created: "2026-09-01"
+  source: "migration-p0"
+relationships:
+  requires: []
+  optional: []
+  conflicts: []
+  extends: []
+  supersedes: []
+  composes: []
+  related: []
+evaluation:
+  quality_score: 0.0
+  tests_passed: 0
+  tests_total: 0
