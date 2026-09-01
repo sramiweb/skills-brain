@@ -1,122 +1,192 @@
-# Skills-Brain — Spé««ifications du Projet
+# Skills Brain v2 — Spé««cifications
 
-## Vision
+**Version** : 2.0  
+**Statut** : architecture cible  
+**Derniè««re MAJ** : 2026-09-01
 
-**Skills-Brain** est un dépôt centralisé«« de skills (compé««tences) réutilisables pour agents AI (OpenCode, Claude Code, etc.). Chaque skill est un workflow autonome, testé«« et documenté««, décrivait une tâche spécifique que l'agent peut exé««cuter.
+## 1. Vision
 
-## Objectif Principal
+**Skills Brain** est une plateforme open source permettant de définir, découvrir, valider, évaluer, sécuriser, composer et faire évoluer des compétences utilisables par des agents IA.
 
-Fournir une bibliothèque de skills **fiable, maintenable et extensible** pour :
-- **Accé««lé««rer le développement** : Les agents réutilisent des workflows éprouvé««s au lieu de réinventer chaque tâche.
-- **Garantir la qualité** : Chaque skill inclut tests, exemples et critères de validation.
-- **Faciliter la maintenance** : Structure standardisé««e, documentation claire, versioning s émantique.
+Un Skill n'est pas simplement un prompt.  
+Un Skill représente une **capacité«« opérationnelle versionné««e et mesurable**.
 
-## Périmè««tre
+## 2. Positionnement
 
-### Inclus
-- Skills gén ériques (templates) pour workflows communs (dé««ploiement, audit sécurité, migration, évaluation).
-- Skills spé «cifiques à AgenticOS (implé««mentations réelles des templates).
-- Skills pour services externes (Zabbix, Proxi, etc.).
-- Documentation, tests, exemples d'usage.
+Skills Brain est **indé««pendant** d'AgenticOS et peut ê «tre utilisé par :
 
-### Exclus
-- Code d'application métier (ce n'est pas un dépôt de microservices).
-- Configuration d'infrastructure (Terraform, Ansible, etc.).
-- Secrets ou credentials (utiliser des variables d'environnement ou vaults externes).
+- AgenticOS
+- Hermes Agent
+- Claude Code
+- Codex
+- OpenCode
+- Cursor
+- Autres agents compatibles avec SKILL.md
 
-## Architecture
+**Skills Brain** = Systè««me de connaissance et gouvernance des compé««tences  
+**AgenticOS** = Runtime et orchestrateur
+
+## 3. Architecture Cible
 
 ```
 skills-brain/
+│
+├── README.md                 # Vue d'ensemble
 ├── SPECIFICATION.md          # Ce fichier
-├── README.md                 # Vue d'ensemble du projet
-├── templates/                # Skills gén ériques réutilisables
-│   ├── README.md
-│   ├── template-deployment/
-│   ├── template-security-audit/
-│   ├── template-migration/
-│   └── template-eval/
-├── agenticos/                # Skills spé «cifiques à AgenticOS
-│   ├── agenticos-deploy/
-│   ├── agenticos-security-scan/
-│   ├── agenticos-migration-runner/
-│   └── agenticos-agent-audit/
-└── services/                 # Skills pour services externes
-    ├── zabbix-proxi-monitor/
-    └── .../
+├── LICENSE                   # MIT
+├── CHANGELOG.md              # Historique
+│
+├── standards/                # Règles communes
+│   ├── skill-spec-v2.md      # Spé««cification Skill
+│   ├── lifecycle.md          # Lifecycle (draft → retired)
+│   ├── security.md           # Security manifest
+│   ├── evaluation.md         # Quality gates
+│   ├── compatibility.md      # Compatibilité«« agents
+│   └── composition.md        # Composition de skills
+│
+├── schemas/                  # JSON Schemas
+│   ├── skill.schema.json     # skill.yaml
+│   ├── test.schema.json      # tests/scenarios.yaml
+│   ├── eval.schema.json      # evals/golden.yaml
+│   ├── decision.schema.json  # decision records
+│   └── capability.schema.json# Capability ontology
+│
+├── core/                     # Composants core (à«« venir)
+│   ├── skill-creator/
+│   ├── skill-reviewer/
+│   ├── skill-evaluator/
+│   ├── skill-resolver/
+│   ├── skill-composer/
+│   ├── skill-security-reviewer/
+│   ├── skill-deliberator/
+│   └── skill-retrospective/
+│
+├── skills/                   # Bibliothèque de skills
+│   ├── agenticos/            # Skills AgenticOS
+│   ├── templates/            # Templates gén ériques
+│   └── services/             # Services externes
+│
+├── protocols/                # Protocoles (à«« venir)
+│   ├── review/
+│   ├── debate/
+│   ├── red-team/
+│   ├── consensus/
+│   └── human-approval/
+│
+├── catalog/                  # Catalog (à«« venir)
+│   ├── index.json
+│   ├── capabilities.json
+│   ├── dependencies.json
+│   └── compatibility.json
+│
+├── adapters/                 # Adapters (à«« venir)
+│   ├── agenticos/
+│   ├── claude-code/
+│   ├── codex/
+│   ├── opencode/
+│   └── cursor/
+│
+├── tooling/                  # Outils CLI
+│   ├── validate.py           # Validation skills
+│   ├── catalog.py            # Géné «ration catalog
+│   ├── resolve.py            # Skill resolver
+│   ├── eval.py               # É «valuation
+│   └── graph.py              # Skill graph
+│
+├── tests/                    # Tests du repository
+│
+└── .github/
+    └── workflows/
+        └── skills-ci.yml     # CI/CD
 ```
 
-## Standards de Qualité
+## 4. Responsabilit é s
 
-### Structure d'un Skill
+Skills Brain doit ré «pondre à «€ sept questions fondamentales :
 
-Chaque skill (`SKILL.md`) doit contenir :
-1. **Frontmatter YAML** : name, description, triggers, license, compatibility, metadata (author, version, category).
-2. **Purpose** : Description claire de l'objectif.
-3. **Workflow** : É tapes numé««roté««es, reproductibles.
-4. **Examples** : Au moins un "happy path" avec Input/Expected/Actual/Status.
-5. **References** : Liens vers skills liés ou documentation externe.
+1. **Quel Skill existe ?** — Catalog + Discovery
+2. **Quel Skill correspond le mieux à «€ cette mission ?** — Resolver + Ranking
+3. **Ce Skill est-il sû «€r ?** — Security Reviewer + Policies
+4. **Ce Skill fonctionne-t-il ré «€llement ?** — Evaluator + Tests
+5. **Avec quels agents/outils est-il compatible ?** — Compatibility Matrix
+6. **Existe-t-il un meilleur Skill ?** — Quality Score + Reputation
+7. **Que devons-nous am é liorer aprè««s son utilisation ?** — Retrospective + Feedback
 
-### Versioning
+## 5. Skill Structure v2
 
-- **Sé««mantique** : `MAJOR.MINOR.PATCH` (ex: `1.0.0`).
-- **MAJOR** : Changements incompatibles (workflow modifié««).
-- **MINOR** : Nouvelles fonctionnalit é s (workflow étendu, rétrocompatible).
-- **PATCH** : Corrections de bugs, documentation.
+```
+<skill-name>/
+│
+├── SKILL.md            # Portable pour agents (frontmatter minimal)
+├── skill.yaml          # Mé «tadonn ées machine (Skills Brain)
+│
+├── tests/
+│   └── scenarios.yaml  # Happy path, edge case, stress case
+│
+├── evals/
+│   └── golden.yaml     # Tâ««ches de ré «f érence
+│
+├── references/         # Documentation externe
+│
+└── CHANGELOG.md        # Historique des versions
+```
 
-### Tests
+## 6. Lifecycle
 
-- Chaque skill doit avoir des **tests automatisé««s** (si applicable).
-- Les tests doivent couvrir :
-  - **Happy path** : Cas nominal.
-  - **Edge cases** : Cas limites (entr é es invalides, échecs réseau, etc.).
-  - **Error handling** : Gestion des erreurs explicite.
+```
+DRAFT → REVIEW → CANDIDATE → APPROVED → ACTIVE → DEPRECATED → RETIRED
+                                       ↓
+                                  QUARANTINED (exception)
+```
 
-### Documentation
+Aucun auto-publish : un agent ne peut jamais faire `CANDIDATE → ACTIVE` automatiquement pour un Skill avec side effects significatifs.
 
-- **README.md** à la racine : Vue d'ensemble, installation, usage, contribution.
-- **README.md** par catégorie (`templates/`, `agenticos/`, `services/`) : Liste des skills, liens.
-- **SKILL.md** : Documentation détaillé««e de chaque skill.
+## 7. Quality Gates
 
-## Roadmap
+| Gate | Description |
+|------|-------------|
+| Q0 | Schema (frontmatter, skill.yaml, format, encoding) |
+| Q1 | Static (scope, dependencies, permissions, security) |
+| Q2 | Scenario (happy path, edge case, stress case) |
+| Q3 | Sandbox (exé««cution sans effet dangereux) |
+| Q4 | Golden Tasks (ré««sultats comparé««s aux attentes) |
+| Q5 | Regression (comparaison old vs candidate) |
 
-### Phase 1 — Fondations (Q4 2026)
-- [x] Créer les 4 templates gén ériques (deployment, security-audit, migration, eval).
-- [ ] Créer les 4 skills AgenticOS correspondants.
-- [ ] Ajouter tests et exemples pour chaque skill.
-- [ ] Documentation complète (README, contribution, changelog).
+## 8. Skill Score
 
-### Phase 2 — Expansion (Q1 2027)
-- [ ] Ajouter 5-10 skills pour services externes (Zabbix, Proxi, etc.).
-- [ ] Inté««gration CI/CD (validation automatique des skills).
-- [ ] Outils de validation (linting, tests automatisé««s).
+```
+skill_score =
+  capability_match
+×«€ quality_score
+×«€ compatibility
+×«€ context_match
+×«€ trust_score
+÷««« estimated_cost
+```
 
-### Phase 3 — Maturité«« (Q2 2027)
-- [ ] 50+ skills disponibles.
-- [ ] Communauté«« de contributeurs.
-- [ ] Inté««gration avec plateformes AI (marketplace, registry).
+## 9. Principes Architecturaux
 
-## Critè««res de Succè««s
+- **Don't create a Skill when one already exists**
+- **Don't trust a Skill before evaluating it**
+- **Don't activate a Skill before governing it**
+- **Don't duplicate a Skill when composition works**
+- **Don't improve a Skill without measuring regression**
+- **Don't execute a risky Skill without policy enforcement**
+- **Don't let one AI decide when independent review is justified**
 
-- **Adoption** : 10+ projets utilisant skills-brain.
-- **Qualité««** : 95%+ de tests passants, 0 critical bugs.
-- **Maintenance** : Temps moyen de résolution de bug < 48h.
-- **Documentation** : 100% des skills documenté««s avec exemples.
+## 10. Roadmap
 
-## Contribution
+| Phase | Objectif | Statut |
+|-------|----------|--------|
+| P0 | Nettoyage + Structure v2 | ✅ |
+| P1 | Skill Spec v2 + Schemas + Tooling | ✅ |
+| P2 | Quality (evaluator, golden tasks, scores) | ⏳ |
+| P3 | Intelligence (catalog, resolver, graph) | ⏳ |
+| P4 | Composition (DAG, composite skills) | ⏳ |
+| P5 | Deliberation (council, debate, decision) | ⏳ |
 
-1. Fork le dé «pô«««.
-2. Cr é er une branche (`feature/mon-skill`).
-3. Ajouter le skill (suivre le template).
-4. Ajouter tests et documentation.
-5. Ouvrir une Pull Request.
+## 11. R é f é rences
 
-## License
-
-MIT — Voir `LICENSE`.
-
-## Contact
-
-- **Author** : S R
-- **Email** : 122878753+sramiweb@users.noreply.github.com
-- **Repo** : https://github.com/sramiweb/skills-brain
+- [`standards/skill-spec-v2.md`](./standards/skill-spec-v2.md)
+- [`schemas/skill.schema.json`](./schemas/skill.schema.json)
+- [`README.md`](./README.md)
