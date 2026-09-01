@@ -1,0 +1,41 @@
+# Skills Brain v2 - Skill Manifest
+schema_version: "2.0"
+id: "agenticos/agenticos-agent-audit"
+name: "Agenticos Agent Audit"
+version: "1.0.0"
+status: "active"
+description: "Audit agent behavior and decisions"
+category: "agenticos"
+capabilities:
+  - "agenticos.agent-audit"
+  - "agent.audit"
+  - "verification.audit"
+risk:
+  level: 2
+  description: "Read-only audit with reporting"
+side_effects:
+  - "Generates audit reports"
+  - "May flag behavioral anomalies"
+security:
+  data_class: "internal"
+  permissions:
+    - "read:files"
+    - "read:logs"
+    - "execute:commands"
+provenance:
+  author: "sramiweb"
+  created: "2026-09-01"
+  source: "migration-p0"
+relationships:
+  requires: []
+  optional: []
+  conflicts: []
+  extends: []
+  supersedes: []
+  composes: []
+  related:
+    - "templates/template-security-audit"
+evaluation:
+  quality_score: 0.0
+  tests_passed: 0
+  tests_total: 0
