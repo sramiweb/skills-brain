@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/sramiweb/skills-brain/main/schemas/outcome.schema.json",
+  "title": "Skills Brain Runtime Outcome",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "subject", "expected", "observed", "success", "verified"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id", "version"],
+      "properties": {
+        "type": {"type": "string", "enum": ["skill", "protocol", "agent", "model", "decision", "workflow"]},
+        "id": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "minLength": 1}
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "runtime": {"type": "string"},
+        "domain": {"type": "string"},
+        "tenant_hash": {"type": "string"}
+      }
+    },
+    "expected": {"type": "object"},
+    "observed": {"type": "object"},
+    "delta": {"type": "object"},
+    "success": {"type": "boolean"},
+    "verified": {"type": "boolean"},
+    "verification_score": {"type": "number", "minimum": 0, "maximum": 1},
+    "duration_ms": {"type": "integer", "minimum": 0},
+    "cost": {"type": "number", "minimum": 0},
+    "tool_failures": {"type": "integer", "minimum": 0},
+    "human_override": {"type": "boolean"},
+    "unexpected_effects": {"type": "array", "items": {"type": "string"}},
+    "evidence_refs": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  }
+}
