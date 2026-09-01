@@ -1,0 +1,42 @@
+# Skills Brain v2 - Skill Manifest
+schema_version: "2.0"
+id: "templates/template-security-audit"
+name: "Template Security Audit"
+version: "1.0.0"
+status: "active"
+description: "Template for security audit workflows"
+category: "templates"
+capabilities:
+  - "templates.security-audit"
+  - "security.audit"
+  - "audit.template"
+risk:
+  level: 2
+  description: "Template execution with user-defined scope"
+side_effects:
+  - "Generates security audit reports"
+  - "May flag vulnerabilities"
+security:
+  data_class: "internal"
+  permissions:
+    - "read:files"
+    - "execute:commands"
+    - "scan:security"
+provenance:
+  author: "sramiweb"
+  created: "2026-09-01"
+  source: "migration-p0"
+relationships:
+  requires: []
+  optional: []
+  conflicts: []
+  extends: []
+  supersedes: []
+  composes: []
+  related:
+    - "agenticos/agenticos-security-scan"
+    - "agenticos/agenticos-agent-audit"
+evaluation:
+  quality_score: 0.0
+  tests_passed: 0
+  tests_total: 0
