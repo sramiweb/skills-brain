@@ -1,0 +1,53 @@
+# Skills Brain v2 - Skill Manifest
+# Source of truth: standards/skill-spec-v2.md
+
+schema_version: "2.0"
+id: "agenticos/agenticos-deploy"
+name: "Agenticos Deploy"
+version: "1.0.0"
+status: "active"
+description: "Deploy AgenticOS agents with verification harness"
+category: "agenticos"
+
+capabilities:
+  - "agenticos.deploy"
+  - "deployment.orchestration"
+  - "verification.harness"
+
+risk:
+  level: 3
+  description: "Production deployment with external API calls"
+
+side_effects:
+  - "Creates/updates cloud resources"
+  - "Deploys containerized applications"
+  - "Configures monitoring and alerts"
+
+security:
+  data_class: "internal"
+  permissions:
+    - "read:files"
+    - "write:files"
+    - "execute:commands"
+    - "deploy:cloud"
+
+provenance:
+  author: "sramiweb"
+  created: "2026-09-01"
+  source: "migration-p0"
+
+relationships:
+  requires: []
+  optional:
+    - "agenticos/security-scan"
+  conflicts: []
+  extends: []
+  supersedes: []
+  composes: []
+  related:
+    - "templates/deployment"
+
+evaluation:
+  quality_score: 0.0
+  tests_passed: 0
+  tests_total: 0
