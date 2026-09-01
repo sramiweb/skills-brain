@@ -1,0 +1,45 @@
+# Skills Brain v2 - Skill Manifest
+schema_version: "2.0"
+id: "agenticos/agenticos-migration-runner"
+name: "Agenticos Migration Runner"
+version: "1.0.0"
+status: "active"
+description: "Run database and service migrations safely"
+category: "agenticos"
+capabilities:
+  - "agenticos.migration-runner"
+  - "database.migrate"
+  - "deployment.migration"
+risk:
+  level: 4
+  description: "Database modifications with rollback capability"
+side_effects:
+  - "Modifies database schema"
+  - "Migrates data"
+  - "May require downtime"
+security:
+  data_class: "confidential"
+  permissions:
+    - "read:files"
+    - "write:files"
+    - "execute:commands"
+    - "write:database"
+provenance:
+  author: "sramiweb"
+  created: "2026-09-01"
+  source: "migration-p0"
+relationships:
+  requires:
+    - "agenticos/agenticos-deploy"
+  optional:
+    - "agenticos/agenticos-security-scan"
+  conflicts: []
+  extends: []
+  supersedes: []
+  composes: []
+  related:
+    - "templates/template-migration"
+evaluation:
+  quality_score: 0.0
+  tests_passed: 0
+  tests_total: 0
