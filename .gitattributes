@@ -1,0 +1,26 @@
+# Skills Brain Git Attributes
+# Enforce UTF-8 and LF line endings
+
+* text=auto eol=lf
+
+# Markdown files
+*.md text eol=lf
+
+# YAML/JSON
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+
+# Shell scripts
+*.sh text eol=lf eol=lf
+
+# Python
+*.py text eol=lf
+
+# Explicitly mark as UTF-8
+*.md working-tree-encoding=UTF-8
+*.yaml working-tree-encoding=UTF-8
+*.yml working-tree-encoding=UTF-8
+*.json working-tree-encoding=UTF-8
+*.sh working-tree-encoding=UTF-8
+*.py working-tree-encoding=UTF-8
