@@ -1,0 +1,175 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/sramiweb/skills-brain/main/schemas/skill.schema.json",
+  "title": "Skills Brain Skill Manifest",
+  "description": "Schema for skill.yaml files in Skills Brain v2",
+  "type": "object",
+  "required": ["schema_version", "id", "version", "status", "capabilities"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Version of the skill schema"
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Unique skill identifier"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Skill version (semver)"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "review", "candidate", "approved", "active", "deprecated", "retired", "quarantined"],
+      "description": "Lifecycle status"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9.\\-_]+$"
+      },
+      "minItems": 1,
+      "description": "Capability ontology (e.g., postgres.diagnose)"
+    },
+    "inputs": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "outputs": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "tools": {
+      "type": "object",
+      "properties": {
+        "required": {"type": "array", "items": {"type": "string"}},
+        "optional": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "filesystem": {"type": "string", "enum": ["none", "read", "write"]},
+        "network": {"type": "string", "enum": ["none", "restricted", "full"]},
+        "database": {"type": "string", "enum": ["none", "read-only", "read-write"]},
+        "shell": {"type": "boolean"}
+      }
+    },
+    "side_effects": {
+      "type": "string",
+      "enum": ["none", "local", "reversible", "external", "destructive"]
+    },
+    "risk": {
+      "type": "object",
+      "properties": {
+        "level": {"type": "integer", "minimum": 0, "maximum": 5}
+      }
+    },
+    "data_classes": {
+      "type": "object",
+      "properties": {
+        "allowed": {
+          "type": "array",
+          "items": {"type": "string", "pattern": "^S[0-9]+$"}
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "properties": {
+        "skills": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      }
+    },
+    "conflicts": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "supersedes": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "evaluation": {
+      "type": "object",
+      "properties": {
+        "golden_tasks": {"type": "string", "enum": ["required", "optional", "none"]},
+        "minimum_score": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "ownership": {
+      "type": "object",
+      "properties": {
+        "maintainer": {"type": "string"}
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["origin"],
+      "properties": {
+        "origin": {"type": "string", "enum": ["skills-brain", "external"]},
+        "author": {"type": "string"},
+        "imported_from": {"type": "string"},
+        "reviewed_by": {"type": "array", "items": {"type": "string"}},
+        "created_at": {"type": "string", "format": "date-time"},
+        "last_review": {"type": "string", "format": "date-time"}
+      }
+    },
+    "compatibility": {
+      "type": "object",
+      "additionalProperties": {"type": "string"}
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "network": {
+          "type": "object",
+          "properties": {
+            "outbound": {"type": "boolean"}
+          }
+        },
+        "filesystem": {
+          "type": "object",
+          "properties": {
+            "read": {"type": "boolean"},
+            "write": {"type": "boolean"}
+          }
+        },
+        "shell": {"type": "boolean"},
+        "credentials": {
+          "type": "object",
+          "properties": {
+            "required": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "max_classification": {"type": "string", "pattern": "^S[0-9]+$"}
+          }
+        },
+        "destructive_operations": {"type": "boolean"}
+      }
+    },
+    "idempotency": {
+      "type": "object",
+      "properties": {
+        "supported": {"type": "boolean"},
+        "key_strategy": {"type": "string"}
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "properties": {
+        "skill_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "manifest_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "package_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    }
+  }
+}
