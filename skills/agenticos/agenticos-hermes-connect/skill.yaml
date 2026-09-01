@@ -1,0 +1,42 @@
+# Skills Brain v2 - Skill Manifest
+schema_version: "2.0"
+id: "agenticos/agenticos-hermes-connect"
+name: "Agenticos Hermes Connect"
+version: "1.0.0"
+status: "active"
+description: "Connect AgenticOS to Hermes protocol"
+category: "agenticos"
+capabilities:
+  - "agenticos.hermes-connect"
+  - "protocol.hermes"
+  - "integration.messaging"
+risk:
+  level: 3
+  description: "External protocol integration"
+side_effects:
+  - "Establishes external connections"
+  - "Sends/receives messages via Hermes"
+  - "May expose internal state"
+security:
+  data_class: "confidential"
+  permissions:
+    - "read:files"
+    - "execute:commands"
+    - "network:outbound"
+    - "protocol:hermes"
+provenance:
+  author: "sramiweb"
+  created: "2026-09-01"
+  source: "migration-p0"
+relationships:
+  requires: []
+  optional: []
+  conflicts: []
+  extends: []
+  supersedes: []
+  composes: []
+  related: []
+evaluation:
+  quality_score: 0.0
+  tests_passed: 0
+  tests_total: 0
