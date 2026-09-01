@@ -1,10 +1,13 @@
-name: Validate Skills
+name: Skills Brain CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "feat/**"]
   pull_request:
     branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
   validate:
@@ -12,32 +15,52 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validate SKILL.md files
-        run: |
-          echo "Checking all SKILL.md files have required sections..."
-          for file in $(find . -name "SKILL.md"); do
-            echo "Validating $file"
-            grep -q "^name:" "$file" || (echo "Missing name in $file" && exit 1)
-            grep -q "^description:" "$file" || (echo "Missing description in $file" && exit 1)
-            grep -q "^license:" "$file" || (echo "Missing license in $file" && exit 1)
-            grep -q "^## Purpose" "$file" || (echo "Missing Purpose in $file" && exit 1)
-            grep -q "^## Workflow" "$file" || (echo "Missing Workflow in $file" && exit 1)
-            grep -q "^## Examples" "$file" || (echo "Missing Examples in $file" && exit 1)
-          done
-          echo "All SKILL.md files are valid!"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
-      - name: Check YAML frontmatter
-        run: |
-          echo "Validating YAML frontmatter syntax..."
-          for file in $(find . -name "SKILL.md"); do
-            head -n 15 "$file" | grep -q "^---$" || (echo "Invalid frontmatter in $file" && exit 1)
-          done
-          echo "YAML frontmatter OK!"
+      - name: Install validation dependencies
+        run: pip install -r requirements-dev.txt
 
-      - name: Verify directory structure
+      - name: Reject non-UTF-8 text files
         run: |
-          echo "Checking directory structure..."
-          test -d "templates" || (echo "Missing templates/" && exit 1)
-          test -d "agenticos" || (echo "Missing agenticos/" && exit 1)
-          test -d "services" || (echo "Missing services/" && exit 1)
-          echo "Structure OK!"
+          python - <<'PY'
+          from pathlib import Path
+          roots = [Path('skills'), Path('standards'), Path('schemas'), Path('protocols'), Path('tooling')]
+          suffixes = {'.md', '.yaml', '.yml', '.json', '.py', '.txt'}
+          failures = []
+          for root in roots:
+              if not root.exists():
+                  continue
+              for path in root.rglob('*'):
+                  if path.is_file() and path.suffix.lower() in suffixes:
+                      try:
+                          path.read_text(encoding='utf-8')
+                      except UnicodeDecodeError as exc:
+                          failures.append(f'{path}: {exc}')
+          if failures:
+              raise SystemExit('Invalid UTF-8:\n' + '\n'.join(failures))
+          print('UTF-8 check passed')
+          PY
+
+      - name: Validate canonical skills
+        run: python tooling/validate.py --all
+
+      - name: Validate tooling syntax
+        run: python -m compileall -q tooling
+
+      - name: Run tests
+        run: pytest -q
+
+      - name: Build catalog
+        run: python tooling/catalog.py
+
+      - name: Ensure generated catalog is reproducible
+        run: |
+          if [ -d catalog ]; then
+            git diff --exit-code -- catalog || {
+              echo "Generated catalog differs from committed catalog. Run python tooling/catalog.py and commit the result."
+              exit 1
+            }
+          fi
