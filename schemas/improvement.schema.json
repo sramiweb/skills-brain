@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/sramiweb/skills-brain/main/schemas/improvement.schema.json",
+  "title": "Skills Brain Improvement Proposal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "proposal_id", "target", "source_learning", "proposed_change", "evidence_refs", "risk", "tests_required", "status"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "proposal_id": {"type": "string", "minLength": 1},
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "id", "current_version"],
+      "properties": {
+        "type": {"type": "string", "enum": ["skill", "protocol", "standard", "resolver", "evaluation"]},
+        "id": {"type": "string", "minLength": 1},
+        "current_version": {"type": "string", "minLength": 1}
+      }
+    },
+    "source_learning": {"type": "string", "minLength": 1},
+    "current_behavior": {"type": "string"},
+    "proposed_change": {"type": "string", "minLength": 1},
+    "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true},
+    "expected_effect": {"type": "string"},
+    "risk": {"type": "integer", "minimum": 0, "maximum": 4},
+    "tests_required": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "rollback": {"type": "string"},
+    "requires_deliberation": {"type": "boolean"},
+    "requires_human_approval": {"type": "boolean"},
+    "status": {"type": "string", "enum": ["draft", "candidate", "evaluating", "review", "approved", "rejected", "implemented"]}
+  }
+}
