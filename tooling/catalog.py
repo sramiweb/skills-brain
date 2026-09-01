@@ -1,138 +1,102 @@
 #!/usr/bin/env python3
-"""
-Skills Brain Catalog Generator v2
-
-Gé««nè««re automatiquement le catalog des skills (index.json, capabilities.json, etc.)
-
-Usage:
-    python tooling/catalog.py
-"""
+"""Generate the Skills Brain catalog from canonical skill.yaml manifests."""
 
 import json
-import os
+import sys
 from pathlib import Path
 
 try:
     import yaml
-except ImportError:
-    print("Installing: pip install pyyaml")
-    os.system("pip install pyyaml")
-    import yaml
+except ImportError as exc:
+    print("Missing dependency PyYAML. Install with: pip install -r requirements-dev.txt", file=sys.stderr)
+    raise SystemExit(2) from exc
+
+ROOT = Path(__file__).resolve().parent.parent
+SKILLS_ROOT = ROOT / "skills"
+CATALOG_ROOT = ROOT / "catalog"
 
 
-def extract_capabilities(skill_path):
-    """Extrait les capacités d'un skill depuis skill.yaml ou SKILL.md"""
-    skill_yaml = skill_path / "skill.yaml"
-    skill_md = skill_path / "SKILL.md"
-
-    # Priorité«« à skill.yaml
-    if skill_yaml.exists():
-        with open(skill_yaml, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-            return data.get("capabilities", [])
-
-    # Fallback: extraire depuis SKILL.md frontmatter
-    if skill_md.exists():
-        with open(skill_md, "r", encoding="utf-8") as f:
-            content = f.read()
-
-        if content.startswith("---"):
-            end_idx = content.find("\n---", 3)
-            if end_idx != -1:
-                frontmatter = yaml.safe_load(content[4:end_idx])
-                # Capabilit é s dé «duites de la caté««gorie
-                category = frontmatter.get("metadata", {}).get("category", "unknown")
-                return [f"{category}.skill"]
-
-    return []
+def load_manifest(path: Path):
+    with path.open("r", encoding="utf-8") as handle:
+        data = yaml.safe_load(handle)
+    if not isinstance(data, dict):
+        raise ValueError(f"{path} must contain a YAML object")
+    return data
 
 
-def extract_metadata(skill_path):
-    """Extrait les mé «tadonn ées d'un skill"""
-    skill_yaml = skill_path / "skill.yaml"
-    skill_md = skill_path / "SKILL.md"
-
-    metadata = {
-        "version": "0.0.0",
-        "status": "draft",
-        "quality_score": 0.0,
-        "risk_level": 0,
-    }
-
-    if skill_yaml.exists():
-        with open(skill_yaml, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f)
-            metadata.update({
-                "version": data.get("version", "0.0.0"),
-                "status": data.get("status", "draft"),
-                "risk_level": data.get("risk", {}).get("level", 0),
-            })
-
-    return metadata
+def canonical_id(manifest, manifest_path: Path):
+    skill_id = manifest.get("id")
+    if not skill_id:
+        raise ValueError(f"Missing id in {manifest_path}")
+    return str(skill_id)
 
 
 def generate_catalog():
-    """Gé««nè««re le catalog complet des skills"""
-    skills_dir = Path(__file__).parent.parent / "skills"
-    catalog_dir = Path(__file__).parent.parent / "catalog"
-
-    # Cré «er catalog/
-    catalog_dir.mkdir(exist_ok=True)
+    CATALOG_ROOT.mkdir(exist_ok=True)
 
     index = {}
     capabilities_map = {}
     dependencies = {}
+    compatibility = {}
 
-    for category in ["agenticos", "templates", "services"]:
-        cat_dir = skills_dir / category
-        if not cat_dir.exists():
-            continue
+    manifest_paths = sorted(SKILLS_ROOT.rglob("skill.yaml")) if SKILLS_ROOT.exists() else []
+    for manifest_path in manifest_paths:
+        manifest = load_manifest(manifest_path)
+        skill_id = canonical_id(manifest, manifest_path)
+        if skill_id in index:
+            raise ValueError(f"Duplicate skill id: {skill_id}")
 
-        for skill_dir in cat_dir.iterdir():
-            if not skill_dir.is_dir() or skill_dir.name.startswith("."):
-                continue
+        risk = manifest.get("risk") or {}
+        evaluation = manifest.get("evaluation") or {}
+        relationships = manifest.get("relationships") or {}
+        legacy_dependencies = manifest.get("dependencies") or {}
+        capabilities = list(manifest.get("capabilities") or [])
+        rel_path = manifest_path.parent.relative_to(ROOT).as_posix()
 
-            skill_id = f"{category}/{skill_dir.name}"
-            capabilities = extract_capabilities(skill_dir)
-            metadata = extract_metadata(skill_dir)
+        quality_score = evaluation.get("quality_score")
+        if quality_score is None:
+            quality_score = evaluation.get("minimum_score", 0.0)
 
-            # Index
-            index[skill_id] = {
-                "version": metadata["version"],
-                "status": metadata["status"],
-                "quality_score": metadata["quality_score"],
-                "risk_level": metadata["risk_level"],
-                "capabilities": capabilities,
-                "path": f"skills/{category}/{skill_dir.name}",
-            }
+        index[skill_id] = {
+            "version": manifest.get("version", "0.0.0"),
+            "schema_version": manifest.get("schema_version"),
+            "status": manifest.get("status", "draft"),
+            "quality_score": quality_score or 0.0,
+            "risk_level": risk.get("level", 0),
+            "side_effects": manifest.get("side_effects", "unknown"),
+            "capabilities": capabilities,
+            "path": rel_path,
+        }
 
-            # Capabilities map
-            for cap in capabilities:
-                if cap not in capabilities_map:
-                    capabilities_map[cap] = []
-                capabilities_map[cap].append(skill_id)
+        for capability in capabilities:
+            capabilities_map.setdefault(capability, []).append(skill_id)
 
-            # Dependencies (à«« compl éter)
-            dependencies[skill_id] = {
-                "requires": [],
-                "optional": [],
-                "conflicts": [],
-            }
+        dependencies[skill_id] = {
+            "requires": relationships.get("requires", legacy_dependencies.get("skills", [])),
+            "optional": relationships.get("optional", []),
+            "conflicts": relationships.get("conflicts", manifest.get("conflicts", [])),
+            "extends": relationships.get("extends", []),
+            "supersedes": relationships.get("supersedes", manifest.get("supersedes", [])),
+            "composes": relationships.get("composes", []),
+        }
 
-    # Sauvegarder
-    with open(catalog_dir / "index.json", "w", encoding="utf-8") as f:
-        json.dump(index, f, indent=2, ensure_ascii=False)
+        compatibility[skill_id] = manifest.get("compatibility", {})
 
-    with open(catalog_dir / "capabilities.json", "w", encoding="utf-8") as f:
-        json.dump(capabilities_map, f, indent=2, ensure_ascii=False)
+    for capability in capabilities_map:
+        capabilities_map[capability].sort()
 
-    with open(catalog_dir / "dependencies.json", "w", encoding="utf-8") as f:
-        json.dump(dependencies, f, indent=2, ensure_ascii=False)
+    outputs = {
+        "index.json": index,
+        "capabilities.json": capabilities_map,
+        "dependencies.json": dependencies,
+        "compatibility.json": compatibility,
+    }
+    for filename, payload in outputs.items():
+        with (CATALOG_ROOT / filename).open("w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=2, ensure_ascii=False, sort_keys=True)
+            handle.write("\n")
 
-    print(f"✅ Catalog gé «né««ré«« : {len(index)} skills, {len(capabilities_map)} capabilities")
-    print(f"   → {catalog_dir}/index.json")
-    print(f"   → {catalog_dir}/capabilities.json")
-    print(f"   → {catalog_dir}/dependencies.json")
+    print(f"Catalog generated: {len(index)} skills, {len(capabilities_map)} capabilities")
 
 
 if __name__ == "__main__":
