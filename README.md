@@ -29,6 +29,8 @@ Tool  = WITH WHAT to act
 - Evidence is required before trust.
 - Security, compatibility and integrity checks are fail-closed.
 - Eligibility is checked before ranking or composition.
+- Verified reputation may refine ranking only after eligibility and only for the exact Skill version.
+- Tenant-specific empirical reputation remains runtime-local by default.
 - Composition plans requirements and typed data handoffs; it never grants runtime permissions or data-transfer authority.
 - Runtime outcomes may produce improvement proposals, never uncontrolled production self-modification.
 - A small set of evaluated Skills is more valuable than a large unmeasured catalog.
@@ -37,14 +39,14 @@ Tool  = WITH WHAT to act
 
 ```text
 skills-brain/
-├── standards/          # Lifecycle, capabilities, evaluation, resolution, composition, handoffs, integrity, deliberation, learning
+├── standards/          # Lifecycle, capabilities, evaluation, resolution, reputation, composition, handoffs, integrity, deliberation, learning
 ├── schemas/            # Machine contracts
 ├── core/               # Governance meta-skills
 ├── skills/             # Canonical skill packages
 ├── protocols/          # Debate and decision protocols
 ├── catalog/            # Generated indexes
 ├── adapters/           # Runtime/platform export contracts
-├── tooling/            # Validation, evaluation, catalog, resolver, composer and integrity tooling
+├── tooling/            # Validation, evaluation, reputation, catalog, resolver, composer and integrity tooling
 ├── examples/           # Example requests/contracts
 ├── tests/              # Repository/tooling tests
 └── .github/workflows/  # CI
@@ -103,7 +105,7 @@ ontology
 -> ranking
 ```
 
-A high quality score cannot override a missing tool, incompatible data class or denied lifecycle state.
+A high quality or reputation score cannot override a missing tool, incompatible data class, excess risk or denied lifecycle state.
 
 The resolver returns:
 
@@ -117,9 +119,44 @@ Example:
 python tooling/resolver.py examples/resolution-request.json
 ```
 
-The v1 ranking uses capability coverage, measured Q0-Q5 quality, lifecycle maturity and risk fitness. Missing evaluation evidence contributes zero. `minimum_score` is a threshold and is never treated as achieved quality.
+Base ranking uses capability coverage, measured Q0-Q5 quality, lifecycle maturity and risk fitness. Missing evaluation evidence contributes zero. `minimum_score` is a threshold and is never treated as achieved quality.
 
-See `standards/resolution.md` and `schemas/resolution-request.schema.json`.
+### Verified reputation
+
+`tooling/reputation.py` aggregates verified runtime Outcomes into version-specific reputation evidence.
+
+```text
+verified Outcomes
+-> scope filter
+-> exact Skill version
+-> minimum sample gate
+-> Wilson success lower bound
+-> verification / overrides / tool failures
+-> freshness
+-> reputation report
+```
+
+Global reports include only generic outcomes without `tenant_hash`. Tenant reports can be generated for runtime-local use but the canonical resolver deliberately rejects them.
+
+Example:
+
+```bash
+python tooling/reputation.py /path/to/outcomes \
+  --scope global \
+  --minimum-samples 5 \
+  --as-of 2026-09-02T00:00:00Z \
+  --output reports/reputation.json
+```
+
+Then a resolution request may reference:
+
+```json
+{"reputation_report": "reports/reputation.json"}
+```
+
+Reputation is used only when it matches the **exact current Skill version** and has enough verified samples. Without eligible reputation evidence, the prior resolver score is preserved. With reputation, it is a bounded post-eligibility refinement; it never changes authorization or rejection reasons.
+
+See `standards/resolution.md`, `standards/reputation.md`, `schemas/resolution-request.schema.json` and `schemas/reputation-report.schema.json`.
 
 ## Governed Skill composer
 
@@ -270,7 +307,7 @@ python adapters/agenticos/export.py \
 
 The export contains identity, capabilities, logical requirements, governance metadata and hashes. It never grants tenants, MCP connectors, concrete tools, credentials, mounts, network profiles or approvals.
 
-AgenticOS remains responsible for tenant authorization, runtime selection, concrete MCP tools, data-class enforcement, sandbox/network profiles, approvals, secrets, execution, audit and rollback. A typed handoff in Skills Brain does not authorize the runtime payload transfer.
+AgenticOS remains responsible for tenant authorization, runtime selection, concrete MCP tools, data-class enforcement, sandbox/network profiles, approvals, secrets, execution, audit and rollback. A typed handoff in Skills Brain does not authorize the runtime payload transfer. Tenant-specific empirical reputation likewise remains local unless separately generalized and governed.
 
 ## Deliberation and learning
 
@@ -293,7 +330,7 @@ Outcome
 -> Skill vNext
 ```
 
-Production Skills are never modified directly by unreviewed runtime feedback.
+Production Skills are never modified directly by unreviewed runtime feedback. Statistical reputation may update from verified outcomes, but it is not a Skill modification and never grants execution authority.
 
 ## Core governance Skills
 
@@ -308,7 +345,7 @@ Currently present:
 - `skill-deliberator`
 - `skill-retrospective`
 
-`skill-resolver` describes the eligibility-first method implemented by `tooling/resolver.py`. `skill-composer` describes the governed multi-Skill and typed-handoff method implemented by `tooling/composer.py`. Both are advisory and always leave runtime authorization ungranted.
+`skill-resolver` describes the eligibility-first and verified-reputation ranking method implemented by `tooling/resolver.py`. `skill-composer` describes the governed multi-Skill and typed-handoff method implemented by `tooling/composer.py`. Both are advisory and always leave runtime authorization ungranted.
 
 ## Klerbot Golden Tenant
 
@@ -330,6 +367,7 @@ python tooling/validate.py --all
 pytest -q
 python tooling/evaluator.py
 python tooling/catalog.py
+python tooling/reputation.py --help
 python tooling/resolver.py examples/resolution-request.json
 python tooling/composer.py examples/composition-request.json
 python tooling/eval_harness.py --help
@@ -343,10 +381,10 @@ python tooling/eval_harness.py --help
 | P1 | Strict v2.1 schema + CI + capability ontology | Done |
 | P2 | Evidence-based Q0-Q5 + evaluation harness | Harness implemented; external runtime qualification in progress |
 | P3 | Supply-chain integrity + AgenticOS adapter | Done |
-| P4 | Catalog + capability resolver/composer | Resolver v1 + deterministic composer with typed handoffs implemented; runtime multi-Skill execution pending |
-| P5 | Outcome-driven learning | Foundation done |
+| P4 | Catalog + capability resolver/composer | Resolver v1.1 + verified global reputation + deterministic composer with typed handoffs implemented; runtime multi-Skill execution pending |
+| P5 | Outcome-driven learning | Foundation + verified reputation aggregation implemented |
 | P6 | Deliberation protocols | Foundation done |
-| P7 | Reputation, additional adapters, explicit transforms and advanced composition | Planned |
+| P7 | Additional adapters, explicit transforms and advanced composition | Planned |
 
 See `SPECIFICATION.md` for the normative architecture and rules.
 
