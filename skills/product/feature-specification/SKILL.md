@@ -5,7 +5,7 @@ license: MIT
 compatibility: skills-brain-v2.1, agenticos-v3.1
 metadata:
   author: sramiweb
-  version: "0.1.0"
+  version: "0.1.1"
   category: product
 ---
 
@@ -31,7 +31,8 @@ Translate an evidence-backed product problem into a specification that product, 
 - Do not invent APIs, database fields or infrastructure constraints.
 - Acceptance criteria must describe observable behavior, not implementation preference.
 - Keep non-goals explicit to control scope creep.
+- In a governed composition, do not accept a Skill-to-Skill discovery handoff with an undeclared schema or a data class outside the input contract.
 
 ## Output
 
-A structured feature specification with context, scope, flows, requirements, acceptance criteria, risks, dependencies, non-goals and open questions.
+A structured feature specification with context, scope, flows, requirements, acceptance criteria, risks, dependencies, non-goals and open questions. `skill.yaml` declares the typed `product.discovery-result.v1` input and `product.feature-specification.v1` output used by the composer.

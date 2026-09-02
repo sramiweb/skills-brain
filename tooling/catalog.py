@@ -63,6 +63,7 @@ def build_catalog(skills_root: Path = SKILLS_ROOT, evaluation_results=None):
         legacy_dependencies = manifest.get("dependencies") or {}
         capabilities = list(manifest.get("capabilities") or [])
         requirements = manifest.get("requirements") or {}
+        contracts = manifest.get("contracts") or {}
         rel_path = manifest_path.parent.relative_to(ROOT).as_posix() if manifest_path.is_relative_to(ROOT) else manifest_path.parent.relative_to(skills_root).as_posix()
 
         measured_score = measured.get("score")
@@ -86,6 +87,10 @@ def build_catalog(skills_root: Path = SKILLS_ROOT, evaluation_results=None):
             "requirements": {
                 "tool_capabilities": list(requirements.get("tool_capabilities") or []),
                 "skills": list(requirements.get("skills") or []),
+            },
+            "contracts": {
+                "inputs": list(contracts.get("inputs") or []),
+                "outputs": list(contracts.get("outputs") or []),
             },
             "data_classes": manifest.get("data_classes", {}),
             "compatibility": manifest.get("compatibility", {}),

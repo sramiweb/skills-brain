@@ -2,9 +2,9 @@
 """Governed multi-Skill composition for Skills Brain.
 
 The composer is advisory only. It selects the smallest eligible Skill set that
-covers requested capabilities, closes declared dependencies, rejects conflicts,
-and returns authorization=not_granted. Runtime permissions remain the consuming
-runtime's responsibility.
+covers requested capabilities, closes declared dependencies, resolves compatible
+typed handoffs, rejects conflicts, and returns authorization=not_granted.
+Runtime permissions remain the consuming runtime's responsibility.
 """
 
 from __future__ import annotations
@@ -74,7 +74,6 @@ def resolver_request(request: dict, capabilities: list[str] | None = None) -> di
 
 def validate_request(request: dict) -> None:
     jsonschema.validate(request, load_json(REQUEST_SCHEMA))
-    # Reuse the resolver's ontology and runtime/tool/data-class validation.
     resolver.validate_request(resolver_request(request))
 
 
@@ -100,6 +99,14 @@ def dependency_ids(manifest: dict) -> list[str]:
 
 def superseded_ids(manifest: dict) -> set[str]:
     return set(str(value) for value in ((manifest.get("relationships") or {}).get("supersedes") or []))
+
+
+def input_contracts(manifest: dict) -> list[dict]:
+    return list((manifest.get("contracts") or {}).get("inputs") or [])
+
+
+def output_contracts(manifest: dict) -> list[dict]:
+    return list((manifest.get("contracts") or {}).get("outputs") or [])
 
 
 def assess(
@@ -184,10 +191,80 @@ def relationship_blockers(selected_ids: set[str], manifests: dict[str, tuple[Pat
     return sorted(blockers)
 
 
-def topological_order(selected_ids: set[str], manifests: dict[str, tuple[Path, dict]]) -> tuple[list[str], list[str]]:
+def resolve_handoffs(
+    selected_ids: set[str],
+    manifests: dict[str, tuple[Path, dict]],
+    scores: dict[str, float],
+) -> tuple[list[dict], set[tuple[str, str]], list[str]]:
+    handoffs: list[dict] = []
+    edges: set[tuple[str, str]] = set()
+    blockers: set[str] = set()
+
+    for consumer_id in sorted(selected_ids):
+        consumer = manifests[consumer_id][1]
+        for contract in input_contracts(consumer):
+            if contract.get("source") != "skill":
+                continue
+
+            schema_id = str(contract.get("schema_id"))
+            accepted_classes = set(contract.get("allowed_data_classes") or [])
+            source_capabilities = set(contract.get("from_capabilities") or [])
+            compatible: list[tuple[str, dict]] = []
+            schema_matches: list[tuple[str, dict]] = []
+
+            for producer_id in sorted(selected_ids - {consumer_id}):
+                producer = manifests[producer_id][1]
+                producer_capabilities = set(producer.get("capabilities") or [])
+                if source_capabilities and not (producer_capabilities & source_capabilities):
+                    continue
+                for output in output_contracts(producer):
+                    if str(output.get("schema_id")) != schema_id:
+                        continue
+                    schema_matches.append((producer_id, output))
+                    if output.get("data_class") in accepted_classes:
+                        compatible.append((producer_id, output))
+
+            if not compatible:
+                if contract.get("required", False):
+                    if schema_matches:
+                        observed = sorted({str(output.get("data_class")) for _, output in schema_matches})
+                        blockers.add(
+                            f"handoff_data_class_denied:{consumer_id}:{contract.get('id')}:{','.join(observed)}"
+                        )
+                    else:
+                        blockers.add(f"handoff_unresolved:{consumer_id}:{contract.get('id')}:{schema_id}")
+                continue
+
+            producer_id, output = sorted(
+                compatible,
+                key=lambda item: (-scores.get(item[0], 0.0), item[0], str(item[1].get("id"))),
+            )[0]
+            edges.add((producer_id, consumer_id))
+            handoffs.append({
+                "producer_skill": producer_id,
+                "output": str(output.get("id")),
+                "consumer_skill": consumer_id,
+                "input": str(contract.get("id")),
+                "schema_id": schema_id,
+                "data_class": str(output.get("data_class")),
+            })
+
+    handoffs.sort(key=lambda item: (item["consumer_skill"], item["input"], item["producer_skill"], item["output"]))
+    return handoffs, edges, sorted(blockers)
+
+
+def topological_order(
+    selected_ids: set[str],
+    manifests: dict[str, tuple[Path, dict]],
+    extra_edges: set[tuple[str, str]] | None = None,
+) -> tuple[list[str], list[str]]:
     order: list[str] = []
     state: dict[str, int] = {}
     blockers: list[str] = []
+    incoming: dict[str, set[str]] = {skill_id: set() for skill_id in selected_ids}
+    for producer, consumer in extra_edges or set():
+        if producer in selected_ids and consumer in selected_ids:
+            incoming.setdefault(consumer, set()).add(producer)
 
     def visit(skill_id: str, trail: list[str]) -> None:
         current = state.get(skill_id, 0)
@@ -198,9 +275,10 @@ def topological_order(selected_ids: set[str], manifests: dict[str, tuple[Path, d
             return
         state[skill_id] = 1
         _, manifest = manifests[skill_id]
-        for dependency_id in dependency_ids(manifest):
-            if dependency_id in selected_ids:
-                visit(dependency_id, trail + [skill_id])
+        predecessors = set(dependency_ids(manifest)) & selected_ids
+        predecessors.update(incoming.get(skill_id, set()))
+        for dependency_id in sorted(predecessors):
+            visit(dependency_id, trail + [skill_id])
         state[skill_id] = 2
         if skill_id not in order:
             order.append(skill_id)
@@ -215,11 +293,7 @@ def side_effects_for(selected_ids: set[str], manifests: dict[str, tuple[Path, di
     return max(effects, key=lambda value: SIDE_EFFECT_SCORE.get(value, SIDE_EFFECT_SCORE["unknown"]), default="none")
 
 
-def selected_skill_payload(
-    skill_id: str,
-    manifest: dict,
-    dependency: bool,
-) -> dict:
+def selected_skill_payload(skill_id: str, manifest: dict, dependency: bool) -> dict:
     requirements = manifest.get("requirements") or {}
     return {
         "id": skill_id,
@@ -242,8 +316,9 @@ def build_result(
     rejected: list[dict] | None = None,
 ) -> dict:
     requested = list(request["capabilities"])
-    execution_order, topo_blockers = topological_order(selected_ids, manifests) if selected_ids else ([], [])
-    blockers = sorted(set(blockers + topo_blockers))
+    handoffs, handoff_edges, handoff_blockers = resolve_handoffs(selected_ids, manifests, scores) if selected_ids else ([], set(), [])
+    execution_order, topo_blockers = topological_order(selected_ids, manifests, handoff_edges) if selected_ids else ([], [])
+    blockers = sorted(set(blockers + handoff_blockers + topo_blockers))
 
     coverage = {}
     for capability in requested:
@@ -268,7 +343,7 @@ def build_result(
     )
 
     payload = {
-        "composer_version": "1.0",
+        "composer_version": "1.1",
         "authorization": "not_granted",
         "requested_capabilities": requested,
         "status": "composed" if selected_ids and not blockers and not missing_capabilities else "unresolved",
@@ -279,6 +354,7 @@ def build_result(
         ],
         "execution_order": execution_order,
         "coverage": coverage,
+        "handoffs": handoffs,
         "combined_requirements": {"tool_capabilities": combined_tools},
         "composite_risk": composite_risk,
         "composite_side_effects": side_effects_for(selected_ids, manifests),
@@ -304,7 +380,6 @@ def compose(request: dict, skills_root: Path = SKILLS_ROOT) -> dict:
     requested = set(request["capabilities"])
     max_skills = int(request.get("max_skills", 6))
 
-    # Scores used only after eligibility, never to bypass a rejection.
     own_scores: dict[str, float] = {}
     for skill_id, (path, manifest) in manifests.items():
         own_caps = list(manifest.get("capabilities") or [])
@@ -347,14 +422,14 @@ def compose(request: dict, skills_root: Path = SKILLS_ROOT) -> dict:
             if not requested.issubset(covered):
                 continue
 
-            closure, dependency_blockers = dependency_closure(
-                seed_ids, manifests, request, evaluation_report
-            )
+            closure, dependency_blockers = dependency_closure(seed_ids, manifests, request, evaluation_report)
             blockers = list(dependency_blockers)
             if len(closure) > max_skills:
                 blockers.append(f"max_skills_exceeded:{len(closure)}>{max_skills}")
             blockers.extend(relationship_blockers(closure, manifests))
-            _, topo_blockers = topological_order(closure, manifests)
+            _, handoff_edges, handoff_blockers = resolve_handoffs(closure, manifests, own_scores)
+            blockers.extend(handoff_blockers)
+            _, topo_blockers = topological_order(closure, manifests, handoff_edges)
             blockers.extend(topo_blockers)
             blockers = sorted(set(blockers))
             if blockers:
@@ -367,7 +442,6 @@ def compose(request: dict, skills_root: Path = SKILLS_ROOT) -> dict:
             valid_options.append((key, closure, seed_ids))
 
         if valid_options:
-            # No larger base combination can beat a smaller sufficient composition.
             break
 
     if not valid_options:

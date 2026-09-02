@@ -1,7 +1,7 @@
 schema_version: "2.1"
 id: product-discovery
 name: Product Discovery
-version: 0.1.0
+version: 0.1.1
 status: candidate
 description: Discover and frame evidence-backed product problems and opportunities before solution design.
 category: product
@@ -15,6 +15,12 @@ outputs:
   - problem statements
   - opportunity hypotheses
   - evidence gaps
+contracts:
+  outputs:
+    - id: discovery-result
+      schema_id: product.discovery-result.v1
+      data_class: S2
+      description: Evidence-backed product problems, opportunity hypotheses and unresolved discovery questions.
 risk:
   level: 1
   description: Analytical Skill that does not perform external actions.

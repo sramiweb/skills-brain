@@ -108,6 +108,46 @@ def validate_capabilities(manifest):
         elif entry.get("status") == "deprecated":
             issues.append(f"Deprecated tool capability '{capability}' must not be introduced")
 
+    for contract in (manifest.get("contracts") or {}).get("inputs", []):
+        for capability in contract.get("from_capabilities", []):
+            entry = known_skills.get(capability)
+            if entry is None:
+                issues.append(
+                    f"Unknown handoff source capability '{capability}' in input contract '{contract.get('id')}'"
+                )
+            elif entry.get("status") == "deprecated":
+                issues.append(
+                    f"Deprecated handoff source capability '{capability}' in input contract '{contract.get('id')}'"
+                )
+
+    return issues
+
+
+def validate_contracts(manifest):
+    if str(manifest.get("schema_version")) != "2.1":
+        return []
+
+    issues = []
+    contracts = manifest.get("contracts") or {}
+    inputs = contracts.get("inputs") or []
+    outputs = contracts.get("outputs") or []
+
+    input_ids = [str(item.get("id")) for item in inputs]
+    output_ids = [str(item.get("id")) for item in outputs]
+    if len(input_ids) != len(set(input_ids)):
+        issues.append("Duplicate contracts.inputs id")
+    if len(output_ids) != len(set(output_ids)):
+        issues.append("Duplicate contracts.outputs id")
+
+    skill_allowed_data = set((manifest.get("data_classes") or {}).get("allowed") or [])
+    if skill_allowed_data:
+        for output in outputs:
+            data_class = output.get("data_class")
+            if data_class not in skill_allowed_data:
+                issues.append(
+                    f"Output contract '{output.get('id')}' data_class '{data_class}' is outside skill data_classes.allowed"
+                )
+
     return issues
 
 
@@ -138,9 +178,11 @@ def validate_skill(skill_path):
             errors.append(f"skill.yaml: {message}")
         else:
             try:
-                errors.extend(validate_capabilities(load_manifest(skill_yaml)))
+                manifest = load_manifest(skill_yaml)
+                errors.extend(validate_capabilities(manifest))
+                errors.extend(validate_contracts(manifest))
             except Exception as exc:
-                errors.append(f"Capability ontology validation failed: {exc}")
+                errors.append(f"Capability/contract validation failed: {exc}")
 
     return errors
 

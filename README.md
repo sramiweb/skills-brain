@@ -29,7 +29,7 @@ Tool  = WITH WHAT to act
 - Evidence is required before trust.
 - Security, compatibility and integrity checks are fail-closed.
 - Eligibility is checked before ranking or composition.
-- Composition plans requirements; it never grants runtime permissions.
+- Composition plans requirements and typed data handoffs; it never grants runtime permissions or data-transfer authority.
 - Runtime outcomes may produce improvement proposals, never uncontrolled production self-modification.
 - A small set of evaluated Skills is more valuable than a large unmeasured catalog.
 
@@ -37,7 +37,7 @@ Tool  = WITH WHAT to act
 
 ```text
 skills-brain/
-├── standards/          # Normative lifecycle, capabilities, evaluation, resolution, composition, integrity, deliberation, learning
+├── standards/          # Lifecycle, capabilities, evaluation, resolution, composition, handoffs, integrity, deliberation, learning
 ├── schemas/            # Machine contracts
 ├── core/               # Governance meta-skills
 ├── skills/             # Canonical skill packages
@@ -64,7 +64,9 @@ Minimum package:
 └── skill.yaml
 ```
 
-Optional source assets include `README.md`, `CHANGELOG.md`, `tests/`, `evals/`, `references/`, `resources/`, `scripts/` and `fixtures/`.
+Optional source assets include `README.md`, `CHANGELOG.md`, `tests/`, `evals/`, `references/`, `resources/`, `scripts` and `fixtures/`.
+
+A v2.1 Skill may also declare machine-readable `contracts.inputs` and `contracts.outputs` for governed Skill-to-Skill data flow.
 
 The v2.0 schema remains only for compatibility/migration of historical manifests.
 
@@ -130,7 +132,8 @@ requested capabilities
 -> transitive dependency closure
 -> dependency eligibility
 -> conflicts / supersession
--> topological order
+-> typed handoff resolution
+-> dependency + data-flow ordering
 -> combined logical requirements
 -> composite risk / side effects
 -> authorization: not_granted
@@ -145,6 +148,9 @@ Important properties:
 - missing, cyclic or ineligible dependencies block composition;
 - explicit conflicts and replacement/superseded pairs block composition;
 - `max_skills` applies to the complete closure, not just the initial candidates;
+- required Skill-to-Skill inputs need an exact compatible typed output;
+- typed handoffs add producer → consumer ordering edges;
+- data classes must be explicitly accepted by the consumer; no implicit downgrade occurs;
 - the union of `tool_capabilities` is planning information only, never granted permissions;
 - quality is used only after eligibility and cannot bypass a rejection;
 - every result keeps `authorization: "not_granted"`.
@@ -155,7 +161,17 @@ Example:
 python tooling/composer.py examples/composition-request.json
 ```
 
-See `standards/composition.md`, `schemas/composition-request.schema.json` and `schemas/composition-result.schema.json`.
+The current Product example composes:
+
+```text
+product-discovery
+  product.discovery-result.v1 / S2
+        ↓
+feature-specification
+  accepts product.discovery-result.v1 / S0,S1,S2
+```
+
+See `standards/composition.md`, `standards/handoffs.md`, `schemas/composition-request.schema.json` and `schemas/composition-result.schema.json`.
 
 ## Skill lifecycle
 
@@ -254,7 +270,7 @@ python adapters/agenticos/export.py \
 
 The export contains identity, capabilities, logical requirements, governance metadata and hashes. It never grants tenants, MCP connectors, concrete tools, credentials, mounts, network profiles or approvals.
 
-AgenticOS remains responsible for tenant authorization, runtime selection, concrete MCP tools, data-class enforcement, sandbox/network profiles, approvals, secrets, execution, audit and rollback.
+AgenticOS remains responsible for tenant authorization, runtime selection, concrete MCP tools, data-class enforcement, sandbox/network profiles, approvals, secrets, execution, audit and rollback. A typed handoff in Skills Brain does not authorize the runtime payload transfer.
 
 ## Deliberation and learning
 
@@ -292,7 +308,7 @@ Currently present:
 - `skill-deliberator`
 - `skill-retrospective`
 
-`skill-resolver` describes the eligibility-first method implemented by `tooling/resolver.py`. `skill-composer` describes the governed multi-Skill method implemented by `tooling/composer.py`. Both are advisory and always leave runtime authorization ungranted.
+`skill-resolver` describes the eligibility-first method implemented by `tooling/resolver.py`. `skill-composer` describes the governed multi-Skill and typed-handoff method implemented by `tooling/composer.py`. Both are advisory and always leave runtime authorization ungranted.
 
 ## Klerbot Golden Tenant
 
@@ -327,10 +343,10 @@ python tooling/eval_harness.py --help
 | P1 | Strict v2.1 schema + CI + capability ontology | Done |
 | P2 | Evidence-based Q0-Q5 + evaluation harness | Harness implemented; external runtime qualification in progress |
 | P3 | Supply-chain integrity + AgenticOS adapter | Done |
-| P4 | Catalog + capability resolver/composer | Resolver v1 + deterministic composer v1 implemented; runtime multi-Skill execution pending |
+| P4 | Catalog + capability resolver/composer | Resolver v1 + deterministic composer with typed handoffs implemented; runtime multi-Skill execution pending |
 | P5 | Outcome-driven learning | Foundation done |
 | P6 | Deliberation protocols | Foundation done |
-| P7 | Reputation, typed handoffs, additional adapters and advanced composition | Planned |
+| P7 | Reputation, additional adapters, explicit transforms and advanced composition | Planned |
 
 See `SPECIFICATION.md` for the normative architecture and rules.
 

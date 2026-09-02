@@ -19,6 +19,49 @@
     "ownership",
     "provenance"
   ],
+  "$defs": {
+    "input_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "schema_id", "source", "required", "allowed_data_classes"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+        "schema_id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+        "source": {"type": "string", "enum": ["mission", "skill", "either"]},
+        "required": {"type": "boolean"},
+        "from_capabilities": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"}
+        },
+        "allowed_data_classes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "enum": ["S0", "S1", "S2", "S3"]}
+        },
+        "description": {"type": "string"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"source": {"const": "skill"}}, "required": ["source"]},
+          "then": {"required": ["from_capabilities"]}
+        }
+      ]
+    },
+    "output_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "schema_id", "data_class"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+        "schema_id": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
+        "data_class": {"type": "string", "enum": ["S0", "S1", "S2", "S3"]},
+        "description": {"type": "string"}
+      }
+    }
+  },
   "properties": {
     "schema_version": {"const": "2.1"},
     "id": {"type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"},
@@ -41,6 +84,14 @@
     },
     "inputs": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "outputs": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "contracts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "inputs": {"type": "array", "items": {"$ref": "#/$defs/input_contract"}},
+        "outputs": {"type": "array", "items": {"$ref": "#/$defs/output_contract"}}
+      }
+    },
     "requirements": {
       "type": "object",
       "additionalProperties": false,

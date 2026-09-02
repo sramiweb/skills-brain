@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/sramiweb/skills-brain/main/schemas/composition-result.schema.json",
-  "title": "Skills Brain Composition Result v1.0",
+  "title": "Skills Brain Composition Result v1.1",
   "type": "object",
   "additionalProperties": false,
-  "required": ["composer_version", "authorization", "requested_capabilities", "status", "missing_capabilities", "selected_skills", "execution_order", "coverage", "combined_requirements", "composite_risk", "composite_side_effects", "blocking_reasons"],
+  "required": ["composer_version", "authorization", "requested_capabilities", "status", "missing_capabilities", "selected_skills", "execution_order", "coverage", "handoffs", "combined_requirements", "composite_risk", "composite_side_effects", "blocking_reasons"],
   "properties": {
-    "composer_version": {"const": "1.0"},
+    "composer_version": {"enum": ["1.0", "1.1"]},
     "authorization": {"const": "not_granted"},
     "requested_capabilities": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
     "status": {"type": "string", "enum": ["composed", "unresolved"]},
@@ -37,6 +37,22 @@
         "properties": {
           "owner": {"type": ["string", "null"]},
           "providers": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+        }
+      }
+    },
+    "handoffs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["producer_skill", "output", "consumer_skill", "input", "schema_id", "data_class"],
+        "properties": {
+          "producer_skill": {"type": "string", "minLength": 1},
+          "output": {"type": "string", "minLength": 1},
+          "consumer_skill": {"type": "string", "minLength": 1},
+          "input": {"type": "string", "minLength": 1},
+          "schema_id": {"type": "string", "minLength": 1},
+          "data_class": {"type": "string", "enum": ["S0", "S1", "S2", "S3"]}
         }
       }
     },

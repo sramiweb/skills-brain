@@ -5,7 +5,7 @@ license: MIT
 compatibility: skills-brain-v2.1, agenticos-v3.1
 metadata:
   author: sramiweb
-  version: "0.1.0"
+  version: "0.1.1"
   category: product
 ---
 
@@ -34,4 +34,4 @@ Turn customer, usage and business evidence into clear product problems and oppor
 
 ## Output
 
-A prioritized set of problem statements, supporting evidence, confidence, opportunity hypotheses and unresolved discovery questions.
+A prioritized set of problem statements, supporting evidence, confidence, opportunity hypotheses and unresolved discovery questions. When used in a governed composition, this may be handed off through the typed `product.discovery-result.v1` contract declared in `skill.yaml`.

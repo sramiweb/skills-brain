@@ -1,7 +1,7 @@
 schema_version: "2.1"
 id: feature-specification
 name: Feature Specification
-version: 0.1.0
+version: 0.1.1
 status: candidate
 description: Convert a validated product problem into an implementable, testable feature specification with explicit scope and acceptance criteria.
 category: product
@@ -15,6 +15,24 @@ outputs:
   - feature specification
   - acceptance criteria
   - risks and open questions
+contracts:
+  inputs:
+    - id: discovery-result
+      schema_id: product.discovery-result.v1
+      source: skill
+      required: true
+      from_capabilities:
+        - product.discover
+      allowed_data_classes:
+        - S0
+        - S1
+        - S2
+      description: Validated discovery evidence used as the basis for specification.
+  outputs:
+    - id: feature-specification
+      schema_id: product.feature-specification.v1
+      data_class: S2
+      description: Scoped product feature specification with acceptance criteria and unresolved questions.
 risk:
   level: 1
   description: Produces specifications only; it does not modify products or code.
