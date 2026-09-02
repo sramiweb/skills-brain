@@ -2,7 +2,8 @@
 """Export a canonical Skills Brain skill as an AgenticOS governance contract.
 
 This adapter never grants runtime permissions. It exports canonical requirements,
-governance metadata and deterministic integrity hashes for AgenticOS to bind locally.
+typed data contracts, governance metadata and deterministic integrity hashes for
+AgenticOS to bind locally.
 """
 
 from __future__ import annotations
@@ -47,9 +48,10 @@ def build_export(skill_dir: Path, repository: str, commit: str) -> dict:
 
     manifest = load_manifest(skill_dir)
     requirements = manifest.get("requirements") or {}
+    contracts = manifest.get("contracts") or {}
 
     return {
-        "contract_version": "1.0",
+        "contract_version": "1.1",
         "source": {
             "repository": repository,
             "commit": commit,
@@ -65,6 +67,10 @@ def build_export(skill_dir: Path, repository: str, commit: str) -> dict:
             "requirements": {
                 "tool_capabilities": list(requirements.get("tool_capabilities") or []),
                 "skills": list(requirements.get("skills") or []),
+            },
+            "contracts": {
+                "inputs": list(contracts.get("inputs") or []),
+                "outputs": list(contracts.get("outputs") or []),
             },
             "compatibility": dict(manifest.get("compatibility") or {}),
         },
