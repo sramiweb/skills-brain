@@ -1,0 +1,38 @@
+schema_version: "1.0"
+id: technical-debate-v1
+version: "1.0.0"
+type: deliberation
+purpose: "Architecture, code, database migration, security and release decisions"
+roles:
+  - engineer
+  - critic
+  - security-reviewer
+  - sre-expert
+  - judge
+rounds:
+  - id: independent-analysis
+    blind: true
+  - id: cross-examination
+    blind: false
+  - id: revised-position
+    blind: false
+  - id: judgement
+    blind: false
+rules:
+  evidence_required: true
+  preserve_dissent: true
+  majority_vote_allowed: false
+  proposer_may_judge: false
+  security_veto_overrides: true
+  pre_mortem: true
+limits:
+  max_rounds: 2
+  max_participants: 5
+verdicts:
+  - support
+  - support_with_conditions
+  - reject
+  - insufficient_evidence
+  - escalate
+human_approval:
+  default: conditional

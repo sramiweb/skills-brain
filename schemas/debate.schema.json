@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/sramiweb/skills-brain/main/schemas/debate.schema.json",
+  "title": "Skills Brain Debate Result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "debate_id", "protocol", "topic", "verdict", "confidence", "arguments_for", "arguments_against", "dissent", "evidence_refs", "human_decision_required"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "debate_id": {"type": "string", "minLength": 1},
+    "protocol": {"type": "string", "minLength": 1},
+    "topic": {"type": "string", "minLength": 1},
+    "verdict": {"type": "string", "enum": ["support", "support_with_conditions", "reject", "insufficient_evidence", "escalate"]},
+    "recommended_option": {"type": ["string", "null"]},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "consensus_level": {"type": "number", "minimum": 0, "maximum": 1},
+    "arguments_for": {"type": "array", "items": {"$ref": "#/$defs/argument"}},
+    "arguments_against": {"type": "array", "items": {"$ref": "#/$defs/argument"}},
+    "dissent": {"type": "array", "items": {"$ref": "#/$defs/dissent"}},
+    "unresolved_questions": {"type": "array", "items": {"type": "string"}},
+    "conditions": {"type": "array", "items": {"type": "string"}},
+    "risks": {"type": "array", "items": {"type": "string"}},
+    "missing_evidence": {"type": "array", "items": {"type": "string"}},
+    "evidence_refs": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "human_decision_required": {"type": "boolean"},
+    "participants": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+  },
+  "$defs": {
+    "argument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim", "evidence_refs", "assumptions", "confidence", "falsifier"],
+      "properties": {
+        "claim": {"type": "string", "minLength": 1},
+        "evidence_refs": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "assumptions": {"type": "array", "items": {"type": "string"}},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "falsifier": {"type": "string", "minLength": 1},
+        "severity": {"type": "string", "enum": ["low", "medium", "high", "critical"]}
+      }
+    },
+    "dissent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["participant", "position", "reason"],
+      "properties": {
+        "participant": {"type": "string"},
+        "position": {"type": "string"},
+        "reason": {"type": "string"},
+        "evidence_refs": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}
