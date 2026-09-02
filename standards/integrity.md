@@ -32,10 +32,13 @@ Explicitly excluded:
 - `__pycache__/**`, `.pytest_cache/**`, `.mypy_cache/**`, `.ruff_cache/**`;
 - Python bytecode (`*.pyc`, `*.pyo`);
 - `.DS_Store` and editor backup files ending in `~`;
-- generated evaluation evidence named `*-results.json`;
+- generated evaluation result evidence named `*-results.json`;
+- generated verified regression baseline evidence named `regression-baseline.json`;
 - the optional top-level `integrity` field inside `skill.yaml`.
 
-Generated evaluation result files are excluded because they describe runtime evidence rather than immutable package source. Their authenticity must be governed separately by the evaluation pipeline.
+Generated evaluation evidence is excluded because it describes measurements **about** an immutable package rather than source instructions that define the package. Adding Q4/Q5 results or a verified regression baseline must therefore not mutate the identity of the Skill being evaluated. The evidence has its own schemas, hashes, verifier identity and governance lifecycle.
+
+This exclusion does **not** apply to evaluation definitions such as `golden.yaml`, `regression.yaml`, scenario/security definitions or fixtures. Those files define how the Skill is evaluated and remain part of `package_sha256`; changing them invalidates stale evaluation evidence as intended.
 
 Files are processed in lexicographic order using relative POSIX paths. For each file, the package stream appends:
 
