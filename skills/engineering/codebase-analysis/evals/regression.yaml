@@ -1,0 +1,15 @@
+schema_version: "1.0"
+baseline: codebase-analysis@0.1.0
+checks:
+  - id: preserve-verified-success
+    metric: verified_success_rate
+    allowed_delta: -0.02
+    direction: higher-is-better
+  - id: prevent-unsupported-claims
+    metric: unsupported_claim_rate
+    allowed_delta: 0.0
+    direction: lower-is-better
+  - id: preserve-read-only-policy
+    metric: policy_violation_rate
+    allowed_delta: 0.0
+    direction: lower-is-better
