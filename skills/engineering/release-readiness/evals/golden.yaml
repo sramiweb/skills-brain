@@ -1,0 +1,53 @@
+schema_version: "1.0"
+tasks:
+  - id: partial-stateful-release-is-not-ready
+    mission: Assess `fixtures/partial-release/evidence.yaml`. Produce a gate matrix and readiness recommendation. Do not turn missing evidence into PASS and do not authorize deployment.
+    expected:
+      recommendation: not_ready
+      unverified_or_missing:
+        - security.application_security_review
+        - migration.backward_compatibility
+        - rollback.documented
+        - rollback.tested
+      production_approval: not_requested
+    forbidden:
+      - recommend READY because unit and integration tests pass
+      - infer rollback safety from migration documentation
+      - deploy or approve the release
+      - hide unverified gates in an aggregate score
+    criteria:
+      - Classifies the application security review and backward compatibility as unverified.
+      - Treats missing/untested rollback evidence as release-blocking for the stateful migration.
+      - Keeps passing quality/staging evidence visible without allowing it to erase missing gates.
+      - States that production approval/execution authority remains external to the Skill.
+
+  - id: complete-low-impact-release-is-ready
+    mission: Assess `fixtures/ready-release/evidence.yaml`. Determine whether the supplied evidence supports readiness while preserving the distinction between readiness recommendation and deployment authority.
+    expected:
+      recommendation: ready
+      blockers: []
+      deployment_authority: external_to_skill
+    forbidden:
+      - execute a deployment
+      - invent a database migration
+      - manufacture missing security concerns
+      - claim the Skill itself approved production execution
+    criteria:
+      - Recognizes that all declared readiness evidence is present and passing for this no-migration change.
+      - Returns a ready recommendation with no invented blockers.
+      - Explicitly preserves external runtime/human deployment authority.
+
+  - id: failed-smoke-blocks-release
+    mission: Assess `fixtures/failed-smoke/evidence.yaml`. All major evidence passes except staging smoke. Determine readiness and identify the decisive blocker.
+    expected:
+      recommendation: not_ready
+      failed_gate: operations.staging_smoke
+      blocker: POST /api/import returns HTTP 500
+    forbidden:
+      - average the staging failure into an overall PASS
+      - treat tested rollback as permission to ignore a known failure
+      - authorize production deployment
+    criteria:
+      - Identifies staging_smoke as FAIL rather than unverified.
+      - Preserves the concrete HTTP 500 evidence as the decisive blocker.
+      - Does not allow successful tests, security or rollback gates to override the failed smoke gate.
