@@ -101,9 +101,32 @@ def test_agenticos_export_matches_schema_for_canonical_skill():
     )
     schema = json.loads((ROOT / "schemas" / "agenticos-export.schema.json").read_text(encoding="utf-8"))
     jsonschema.validate(payload, schema)
+    assert payload["contract_version"] == "1.1"
     assert payload["skill"]["id"] == "zabbix-proxy-monitor"
+    assert payload["skill"]["contracts"] == {"inputs": [], "outputs": []}
     assert "connectors" not in payload
     assert "tenants" not in payload
+
+
+def test_agenticos_export_preserves_typed_product_handoff_contract():
+    skill_dir = ROOT / "skills" / "product" / "feature-specification"
+    payload = agenticos_export.build_export(
+        skill_dir,
+        "sramiweb/skills-brain",
+        "b" * 40,
+    )
+    schema = json.loads((ROOT / "schemas" / "agenticos-export.schema.json").read_text(encoding="utf-8"))
+    jsonschema.validate(payload, schema)
+
+    assert payload["contract_version"] == "1.1"
+    assert payload["skill"]["id"] == "feature-specification"
+    input_contract = payload["skill"]["contracts"]["inputs"][0]
+    assert input_contract["schema_id"] == "product.discovery-result.v1"
+    assert input_contract["source"] == "skill"
+    assert input_contract["required"] is True
+    assert input_contract["from_capabilities"] == ["product.discover"]
+    assert input_contract["allowed_data_classes"] == ["S0", "S1", "S2"]
+    assert payload["skill"]["contracts"]["outputs"][0]["schema_id"] == "product.feature-specification.v1"
 
 
 def test_agenticos_export_rejects_floating_or_short_commit():
