@@ -1,0 +1,39 @@
+schema_version: "2.1"
+id: customer-health
+name: Customer Health
+version: 0.1.0
+status: candidate
+description: Assess customer health from observable usage, activation, retention, support and billing signals without exposing unnecessary personal data.
+category: customer
+capabilities:
+  - customer.health.analyze
+inputs:
+  - pseudonymized customer signals
+  - health scoring policy
+outputs:
+  - health classification
+  - contributing signals
+  - recommended follow-up category
+risk:
+  level: 1
+  description: Analytical Skill intended for aggregated or pseudonymized customer signals.
+side_effects: none
+security:
+  network:
+    outbound: false
+  filesystem:
+    read: false
+    write: false
+  shell: false
+  destructive_operations: false
+evaluation:
+  golden_tasks: required
+  minimum_score: 0.90
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT
+  created_at: "2026-09-02T07:00:00Z"
