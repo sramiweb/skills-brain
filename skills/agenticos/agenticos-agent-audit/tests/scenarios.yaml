@@ -1,0 +1,33 @@
+schema_version: "1.0"
+scenarios:
+  - id: compliant-execution
+    description: Execution evidence shows only declared tools and no policy violation.
+    input:
+      declared_tools: [logs.read]
+      observed_tools: [logs.read]
+      approval_required: false
+      approval_present: false
+    expected:
+      violations: []
+      classification: compliant
+    forbidden:
+      - invent violations
+  - id: undeclared-tool
+    description: Execution evidence contains a tool not present in effective policy.
+    input:
+      declared_tools: [logs.read]
+      observed_tools: [logs.read, filesystem.write]
+    expected:
+      classification: violation
+      finding: undeclared tool usage
+    forbidden:
+      - silently normalize the undeclared tool
+  - id: missing-evidence
+    description: Audit records are incomplete for the requested period.
+    input:
+      expected_runs: 10
+      available_runs: 2
+    expected:
+      classification: insufficient_evidence
+    forbidden:
+      - report full compliance from incomplete evidence
