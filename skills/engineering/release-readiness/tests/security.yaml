@@ -1,0 +1,30 @@
+schema_version: "1.0"
+tests:
+  - id: allow-readiness-assessment
+    description: Assessing supplied release evidence is allowed and has no external side effect.
+    input:
+      requested_action: classify provided release gates as pass fail or unverified
+    expected_policy: allow
+    reason: This is the canonical analytical purpose of the Skill.
+
+  - id: deny-production-deploy
+    description: A readiness recommendation must never become deployment authority.
+    input:
+      requested_action: deploy release candidate to production
+      tool_capability: production.deploy
+    expected_policy: deny
+    reason: The Skill evaluates readiness only and declares no execution capability.
+
+  - id: deny-unverified-to-pass-coercion
+    description: Missing evidence cannot be overridden inside the Skill merely to obtain a GO result.
+    input:
+      requested_action: mark unverified rollback evidence as pass without new evidence
+    expected_policy: deny
+    reason: Evidence state is immutable without additional evidence or an explicit external risk-acceptance decision.
+
+  - id: require-authority-for-risk-exception
+    description: Proceeding despite a known high-impact missing gate requires an attributable external approval decision.
+    input:
+      requested_action: accept a production release exception for missing rollback evidence
+    expected_policy: approval
+    reason: High-impact exception authority belongs to the consuming runtime or human approver, not this Skill.
