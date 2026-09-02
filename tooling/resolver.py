@@ -2,7 +2,8 @@
 """Skills Brain capability resolver.
 
 Resolution is advisory only. Eligibility filters run before ranking and never grant
-runtime authorization. AgenticOS remains responsible for tenant/tool/policy checks.
+runtime authorization. Verified global reputation may refine ranking only after
+eligibility; tenant-scoped reputation remains runtime-local.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ import yaml
 ROOT = Path(__file__).resolve().parent.parent
 SKILLS_ROOT = ROOT / "skills"
 REQUEST_SCHEMA = ROOT / "schemas" / "resolution-request.schema.json"
+REPUTATION_SCHEMA = ROOT / "schemas" / "reputation-report.schema.json"
 ONTOLOGY_PATH = ROOT / "standards" / "capabilities.yaml"
 
 STATUS_SCORE = {
@@ -57,11 +59,7 @@ def parse_version(value: str) -> tuple[int, int, int]:
 
 
 def compatibility_satisfied(spec: str, version: str) -> bool:
-    """Evaluate a deliberately small fail-closed numeric compatibility syntax.
-
-    Supported examples: `>=3.1`, `>=3.1,<4`, `3.1`, `==3.1.2`.
-    """
-
+    """Evaluate a deliberately small fail-closed numeric compatibility syntax."""
     actual = parse_version(version)
     clauses = [clause.strip() for clause in spec.split(",") if clause.strip()]
     if not clauses:
@@ -104,16 +102,31 @@ def validate_request(request: dict) -> None:
         raise ValueError("Unknown available tool capabilities: " + ", ".join(unknown_tools))
 
 
+def _configured_path(value: str) -> Path:
+    path = Path(value)
+    return path if path.is_absolute() else ROOT / path
+
+
 def load_evaluation_report(request: dict) -> dict:
     configured = request.get("evaluation_report")
     if configured:
-        path = Path(configured)
-        if not path.is_absolute():
-            path = ROOT / path
-        return load_json(path)
-
+        return load_json(_configured_path(configured))
     default = ROOT / "reports" / "evaluation.json"
     return load_json(default) if default.exists() else {}
+
+
+def load_reputation_report(request: dict) -> dict:
+    configured = request.get("reputation_report")
+    if not configured:
+        return {}
+    report = load_json(_configured_path(configured))
+    jsonschema.validate(report, load_json(REPUTATION_SCHEMA))
+    scope = report.get("scope") or {}
+    if scope.get("type") != "global":
+        raise ValueError(
+            "tenant-scoped reputation is runtime-local and cannot influence the canonical Skills Brain resolver"
+        )
+    return report
 
 
 def iter_manifests(skills_root: Path = SKILLS_ROOT):
@@ -121,7 +134,30 @@ def iter_manifests(skills_root: Path = SKILLS_ROOT):
         yield path, load_yaml(path)
 
 
-def assess_candidate(manifest_path: Path, manifest: dict, request: dict, evaluation_report: dict) -> dict:
+def reputation_for(manifest: dict, reputation_report: dict) -> tuple[float | None, int]:
+    if not reputation_report:
+        return None, 0
+    skill_id = str(manifest.get("id"))
+    entry = (reputation_report.get("subjects") or {}).get(skill_id) or {}
+    if not entry:
+        return None, 0
+    if str(entry.get("version")) != str(manifest.get("version")):
+        return None, int(entry.get("samples", 0) or 0)
+    if not entry.get("eligible_for_ranking", False):
+        return None, int(entry.get("samples", 0) or 0)
+    score = entry.get("reputation_score")
+    if score is None:
+        return None, int(entry.get("samples", 0) or 0)
+    return float(score), int(entry.get("samples", 0) or 0)
+
+
+def assess_candidate(
+    manifest_path: Path,
+    manifest: dict,
+    request: dict,
+    evaluation_report: dict,
+    reputation_report: dict | None = None,
+) -> dict:
     requested = set(request["capabilities"])
     skill_capabilities = set(manifest.get("capabilities") or [])
     matched = sorted(requested & skill_capabilities)
@@ -180,7 +216,10 @@ def assess_candidate(manifest_path: Path, manifest: dict, request: dict, evaluat
     quality = float(evaluation.get("score", 0.0))
     risk_fitness = max(0.0, 1.0 - (risk / 4.0))
     lifecycle = STATUS_SCORE.get(status, 0.0)
-    score = round((coverage * 0.55) + (quality * 0.25) + (lifecycle * 0.10) + (risk_fitness * 0.10), 4)
+    base_score = (coverage * 0.55) + (quality * 0.25) + (lifecycle * 0.10) + (risk_fitness * 0.10)
+    reputation_score, reputation_samples = reputation_for(manifest, reputation_report or {})
+    score = base_score if reputation_score is None else (base_score * 0.90) + (reputation_score * 0.10)
+    score = round(score, 4)
 
     try:
         rel_path = manifest_path.parent.relative_to(ROOT).as_posix()
@@ -202,6 +241,8 @@ def assess_candidate(manifest_path: Path, manifest: dict, request: dict, evaluat
         "missing_tool_capabilities": missing_tools,
         "risk_level": risk,
         "quality_score": quality,
+        "reputation_score": reputation_score,
+        "reputation_samples": reputation_samples,
         "compatibility": compatibility_note,
         "rejection_reasons": reasons,
     }
@@ -210,9 +251,10 @@ def assess_candidate(manifest_path: Path, manifest: dict, request: dict, evaluat
 def resolve(request: dict, skills_root: Path = SKILLS_ROOT) -> dict:
     validate_request(request)
     evaluation_report = load_evaluation_report(request)
+    reputation_report = load_reputation_report(request)
 
     assessed = [
-        assess_candidate(path, manifest, request, evaluation_report)
+        assess_candidate(path, manifest, request, evaluation_report, reputation_report)
         for path, manifest in iter_manifests(skills_root)
     ]
     eligible = [item for item in assessed if item["eligible"]]
@@ -221,6 +263,7 @@ def resolve(request: dict, skills_root: Path = SKILLS_ROOT) -> dict:
             bool(item["full_match"]),
             float(item["score"] or 0.0),
             float(item["quality_score"]),
+            float(item["reputation_score"] or 0.0),
             -int(item["risk_level"]),
             item["id"],
         ),
@@ -229,10 +272,11 @@ def resolve(request: dict, skills_root: Path = SKILLS_ROOT) -> dict:
 
     limit = int(request.get("limit", 10))
     result = {
-        "resolver_version": "1.0",
+        "resolver_version": "1.1",
         "authorization": "not_granted",
         "requested_capabilities": list(request["capabilities"]),
         "full_match_available": any(item["full_match"] for item in eligible),
+        "reputation_evidence_used": bool(reputation_report),
         "candidates": eligible[:limit],
     }
     if request.get("include_rejected", False):

@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/sramiweb/skills-brain/main/schemas/resolution-request.schema.json",
-  "title": "Skills Brain Resolution Request v1.0",
+  "title": "Skills Brain Resolution Request v1.1",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "capabilities", "available_tool_capabilities", "allowed_status", "max_risk"],
@@ -42,6 +42,7 @@
     },
     "limit": {"type": "integer", "minimum": 1, "maximum": 50},
     "include_rejected": {"type": "boolean"},
-    "evaluation_report": {"type": "string", "minLength": 1}
+    "evaluation_report": {"type": "string", "minLength": 1},
+    "reputation_report": {"type": "string", "minLength": 1}
   }
 }

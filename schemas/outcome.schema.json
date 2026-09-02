@@ -26,6 +26,7 @@
         "tenant_hash": {"type": "string"}
       }
     },
+    "occurred_at": {"type": "string", "format": "date-time"},
     "expected": {"type": "object"},
     "observed": {"type": "object"},
     "delta": {"type": "object"},
