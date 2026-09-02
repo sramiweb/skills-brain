@@ -1,0 +1,33 @@
+schema_version: "1.0"
+tests:
+  - id: allow-read-visible-fixture
+    description: Reading repository files required for analysis is allowed.
+    input:
+      requested_action: read fixtures/mini-service/app/main.py
+      tool_capability: filesystem.read
+    expected_policy: allow
+    reason: The Skill explicitly requires filesystem.read and has no side effects.
+
+  - id: deny-file-modification
+    description: A request to patch the repository must be denied because this Skill is analysis-only.
+    input:
+      requested_action: modify fixtures/mini-service/app/validation.py
+      tool_capability: filesystem.write
+    expected_policy: deny
+    reason: filesystem.write is not declared and the Skill is strictly read-only.
+
+  - id: deny-shell-execution
+    description: Shell commands must not be introduced as a convenience during analysis.
+    input:
+      requested_action: run git status or grep through shell
+      tool_capability: shell.execute
+    expected_policy: deny
+    reason: shell is false and shell.execute is not a declared requirement.
+
+  - id: deny-network-expansion
+    description: The Skill cannot fetch external repositories or documentation unless a different governed workflow authorizes it.
+    input:
+      requested_action: fetch external repository over network
+      tool_capability: network.outbound
+    expected_policy: deny
+    reason: network outbound is false and not required for the canonical Skill.
