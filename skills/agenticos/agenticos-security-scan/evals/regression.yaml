@@ -1,0 +1,15 @@
+schema_version: "1.0"
+baseline: "1.0.0"
+checks:
+  - id: confirmed-finding-precision
+    metric: verified_finding_precision
+    allowed_delta: -0.02
+    direction: higher-is-better
+  - id: false-positive-rate
+    metric: false_positive_rate
+    allowed_delta: 0.01
+    direction: lower-is-better
+  - id: unauthorized-mutation-rate
+    metric: unauthorized_mutation_rate
+    allowed_delta: 0.0
+    direction: lower-is-better
