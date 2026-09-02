@@ -32,6 +32,7 @@ Tool  = WITH WHAT to act
 - Verified reputation may refine ranking only after eligibility and only for the exact Skill version.
 - Tenant-specific empirical reputation remains runtime-local by default.
 - Composition plans requirements and typed data handoffs; it never grants runtime permissions or data-transfer authority.
+- Runtime qualification separates execution from independent verification and never treats a successful worker exit as semantic PASS.
 - Runtime outcomes may produce improvement proposals, never uncontrolled production self-modification.
 - A small set of evaluated Skills is more valuable than a large unmeasured catalog.
 
@@ -39,14 +40,14 @@ Tool  = WITH WHAT to act
 
 ```text
 skills-brain/
-├── standards/          # Lifecycle, capabilities, evaluation, resolution, reputation, composition, handoffs, integrity, deliberation, learning
+├── standards/          # Lifecycle, capabilities, evaluation, runtime qualification, resolution, reputation, composition, handoffs, integrity, deliberation, learning
 ├── schemas/            # Machine contracts
 ├── core/               # Governance meta-skills
 ├── skills/             # Canonical skill packages
 ├── protocols/          # Debate and decision protocols
 ├── catalog/            # Generated indexes
-├── adapters/           # Runtime/platform export contracts
-├── tooling/            # Validation, evaluation, reputation, catalog, resolver, composer and integrity tooling
+├── adapters/           # Runtime/platform export + evaluation contracts
+├── tooling/            # Validation, evaluation, qualification, reputation, catalog, resolver, composer and integrity tooling
 ├── examples/           # Example requests/contracts
 ├── tests/              # Repository/tooling tests
 └── .github/workflows/  # CI
@@ -244,7 +245,7 @@ PREPARE
   -> evaluator re-validation
 ```
 
-Prepare a content-addressed Golden Task run:
+Low-level preparation:
 
 ```bash
 python tooling/eval_harness.py prepare \
@@ -252,19 +253,93 @@ python tooling/eval_harness.py prepare \
   --gate Q4
 ```
 
-The external runner returns sanitized observations. A different human, deterministic verifier or independent model checks the exact expected result, every criterion and every forbidden behavior. Finalize only after that independent verification:
-
-```bash
-python tooling/eval_harness.py finalize \
-  skills/agenticos/agenticos-agent-audit \
-  --request reports/eval-runs/agenticos-agent-audit/<run>/request.json \
-  --runner-results /secure/path/runner-results.json \
-  --verification /secure/path/verification.json
-```
+The external runner returns sanitized observations. A different human, deterministic verifier or independent model checks the exact expected result, every criterion and every forbidden behavior. Finalize only after that independent verification.
 
 The generated result is bound to Skill ID/version, `package_sha256` and the exact evaluation-definition hash. Editing the Skill or Golden/Regression definition invalidates stale evidence automatically.
 
-See `standards/evaluation.md` and the `schemas/eval-*.json` contracts.
+### Golden Runtime Qualification Path — AgenticOS
+
+`tooling/qualification.py` implements the governed last mile between Skills Brain evaluation definitions and an external AgenticOS/Hermes execution.
+
+```text
+Skills Brain PREPARE
+        ↓
+request.json + agenticos-plan.json
+        ↓
+AgenticOS / Hermes execution
+        ↓
+observation.json
+        ↓
+Skills Brain COLLECT
+        ↓
+runner-results.json
+        ↓
+Independent verifier
+        ↓
+verification.json
+        ↓
+Skills Brain FINALIZE
+        ↓
+golden-results.json / regression-results.json
+```
+
+Check the first Golden Path Skill:
+
+```bash
+python tooling/qualification.py status \
+  skills/engineering/codebase-analysis
+```
+
+Prepare its Q4 run:
+
+```bash
+python tooling/qualification.py prepare \
+  skills/engineering/codebase-analysis \
+  --gate Q4 \
+  --tenant klerbot \
+  --agent klerbot-coder \
+  --data-class S2 \
+  --model glm-5.3:cloud \
+  --output-dir /secure/eval/codebase-analysis-q4
+```
+
+The plan always has:
+
+```json
+{"authorization": "not_granted"}
+```
+
+AgenticOS must independently authorize the run, use its normal Skills Brain binding and return the exact upstream Skill ID/version/package hash/source commit in `observation.json`.
+
+Collect the runtime observation without scoring it:
+
+```bash
+python tooling/qualification.py collect \
+  --request /secure/eval/codebase-analysis-q4/request.json \
+  --observation /secure/eval/codebase-analysis-q4/observation.json
+```
+
+Only after a different verifier has produced `verification.json` may the run be finalized:
+
+```bash
+python tooling/qualification.py finalize \
+  skills/engineering/codebase-analysis \
+  --request /secure/eval/codebase-analysis-q4/request.json \
+  --runner-results /secure/eval/codebase-analysis-q4/runner-results.json \
+  --verification /secure/eval/codebase-analysis-q4/verification.json
+```
+
+A successful AgenticOS worker exit is **not** a Golden Task PASS. The runner adapter never sets semantic score or `verified=true`.
+
+#### Q5 verified baseline
+
+Q5 requires independently measured historical metrics conforming to `schemas/regression-baseline.schema.json`. Naming `codebase-analysis@0.1.0` in `regression.yaml` is not enough to establish historical values.
+
+`qualification.py prepare --gate Q5` fails closed until a verified baseline exists. Synthetic historical metrics are forbidden; the historical version must be measured under a controlled benchmark or Q5 must be deferred.
+
+Generated Q4/Q5 results and `regression-baseline.json` are evaluation evidence and are excluded from `package_sha256`; evaluation **definitions and fixtures remain included**, so changing the benchmark still invalidates stale evidence.
+
+See `standards/evaluation.md`, `standards/runtime-qualification.md` and `adapters/agenticos/README.md`.
 
 ## Supply-chain integrity
 
@@ -351,6 +426,8 @@ Currently present:
 
 Klerbot is the first end-to-end Golden Tenant for the Skills Brain <-> AgenticOS architecture.
 
+The first runtime qualification target is `codebase-analysis@0.1.1` through AgenticOS `klerbot-coder`, using the exact immutable Skill package and its built-in `fixtures/mini-service` Golden Tasks.
+
 Reusable methods remain in generic domains such as market, product, customer, revenue, growth, content, sales, engineering, SRE and databases. `skills/klerbot/` is reserved for non-generic Klerbot context.
 
 ## Validation
@@ -371,6 +448,7 @@ python tooling/reputation.py --help
 python tooling/resolver.py examples/resolution-request.json
 python tooling/composer.py examples/composition-request.json
 python tooling/eval_harness.py --help
+python tooling/qualification.py status skills/engineering/codebase-analysis
 ```
 
 ## Roadmap
@@ -379,8 +457,8 @@ python tooling/eval_harness.py --help
 |---|---|---|
 | P0 | Canonical structure + duplicate cleanup | Done |
 | P1 | Strict v2.1 schema + CI + capability ontology | Done |
-| P2 | Evidence-based Q0-Q5 + evaluation harness | Harness implemented; external runtime qualification in progress |
-| P3 | Supply-chain integrity + AgenticOS adapter | Done |
+| P2 | Evidence-based Q0-Q5 + evaluation harness | Harness + AgenticOS qualification contracts implemented; live external execution/verification pending |
+| P3 | Supply-chain integrity + AgenticOS adapter | Governance export + runtime qualification adapter implemented |
 | P4 | Catalog + capability resolver/composer | Resolver v1.1 + verified global reputation + deterministic composer with typed handoffs implemented; runtime multi-Skill execution pending |
 | P5 | Outcome-driven learning | Foundation + verified reputation aggregation implemented |
 | P6 | Deliberation protocols | Foundation done |

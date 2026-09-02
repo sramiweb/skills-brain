@@ -28,6 +28,16 @@
         "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
       }
     },
+    "baseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "path", "sha256"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      }
+    },
     "generated_at": {"type": "string", "format": "date-time"},
     "items": {
       "type": "array",
