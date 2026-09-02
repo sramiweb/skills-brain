@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "capabilities": [
+    "engineering.code.review"
+  ],
+  "available_tool_capabilities": [
+    "filesystem.read"
+  ],
+  "allowed_status": [
+    "candidate",
+    "approved",
+    "active"
+  ],
+  "max_risk": 2,
+  "data_class": "S2",
+  "allow_unspecified_data_class": false,
+  "runtime": {
+    "name": "agenticos",
+    "version": "3.1",
+    "require_explicit_compatibility": false
+  },
+  "limit": 5,
+  "include_rejected": true
+}
