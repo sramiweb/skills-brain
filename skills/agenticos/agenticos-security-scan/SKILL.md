@@ -1,56 +1,46 @@
 ---
-name: "Agenticos Security Scan"
-version: "1.0.0"
-status: "active"
+name: agenticos-security-scan
+description: Perform evidence-based security scanning for AgenticOS deployments without mutating production state.
+license: MIT
+compatibility: skills-brain-v2.1, agenticos-v3.1
+metadata:
+  author: sramiweb
+  version: "1.0.0"
+  category: agenticos
 ---
 
-# Agenticos Security Scan
-
-Security scanning skill for AgenticOS deployments.
+# AgenticOS Security Scan
 
 ## Purpose
 
-This skill performs comprehensive security scans on AgenticOS deployments, identifying vulnerabilities, misconfigurations, and compliance issues.
+Identify vulnerabilities, unsafe configuration and policy mismatches using authorized read-oriented security tooling. Findings must be traceable to evidence.
 
 ## Workflow
 
-1. **Discovery**: Scan deployment for exposed endpoints and services
-2. **Analysis**: Run security checks against identified resources
-3. **Reporting**: Generate detailed security report with findings
-4. **Remediation**: Provide actionable remediation steps
+1. Define scope and authorized targets.
+2. Collect configuration and security evidence through approved tools.
+3. Separate confirmed vulnerabilities from hypotheses and informational findings.
+4. Map findings to affected components and severity.
+5. Identify required remediation and validation steps.
+6. Escalate security veto conditions to AgenticOS policy/decision layers.
+7. Produce a report without modifying the target.
 
 ## Inputs
 
-- `deployment_target`: Target deployment URL or identifier
-- `scan_depth`: Depth of scan (shallow, medium, deep)
-- `compliance_framework`: Optional compliance framework (SOC2, ISO27001, etc.)
+- Authorized deployment or configuration scope.
+- Security requirements/policies.
+- Scan evidence.
 
 ## Outputs
 
-- `security_report`: JSON report with findings
-- `risk_score`: Overall risk score (0-100)
-- `remediation_plan`: Prioritized list of fixes
+- Security findings with evidence.
+- Severity/confidence.
+- Remediation recommendations.
+- Blocking/veto recommendation when justified.
 
-## Examples
+## Guardrails
 
-```yaml
-# Run security scan
-skill: agenticos/security-scan
-inputs:
-  deployment_target: "prod-us-east-1"
-  scan_depth: "deep"
-  compliance_framework: "SOC2"
-```
-
-## Quality Gates
-
-- **Q0**: Structure ✓
-- **Q1**: YAML Syntax ✓
-- **Q2**: Schema Compliance ✓
-- **Q3**: Scenarios (TODO)
-- **Q4**: Golden Tasks (TODO)
-- **Q5**: Security Scan ✓
-
-## Changelog
-
-- **1.0.0** (2026-09-01): Initial v2 release
+- Read-only by default.
+- Never scan assets outside explicit scope.
+- Never claim a vulnerability is fixed without verification evidence.
+- A Council consensus cannot override a confirmed security veto.

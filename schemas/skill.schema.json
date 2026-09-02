@@ -20,22 +20,17 @@
     "provenance"
   ],
   "properties": {
-    "schema_version": {
-      "const": "2.1"
-    },
-    "id": {
-      "type": "string",
-      "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"
+    "schema_version": {"const": "2.1"},
+    "id": {"type": "string", "pattern": "^[a-z0-9]+(?:[.-][a-z0-9]+)*$"},
+    "aliases": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true,
+      "description": "Legacy or external identifiers accepted only for migration/resolution. The canonical id remains authoritative."
     },
     "name": {"type": "string", "minLength": 1},
-    "version": {
-      "type": "string",
-      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
-    },
-    "status": {
-      "type": "string",
-      "enum": ["draft", "review", "candidate", "approved", "active", "deprecated", "retired", "quarantined"]
-    },
+    "version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"},
+    "status": {"type": "string", "enum": ["draft", "review", "candidate", "approved", "active", "deprecated", "retired", "quarantined"]},
     "description": {"type": "string", "minLength": 1},
     "category": {"type": "string", "pattern": "^[a-z0-9-]+$"},
     "capabilities": {
@@ -50,16 +45,8 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "tool_capabilities": {
-          "type": "array",
-          "items": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"},
-          "uniqueItems": true
-        },
-        "skills": {
-          "type": "array",
-          "items": {"type": "string"},
-          "uniqueItems": true
-        }
+        "tool_capabilities": {"type": "array", "items": {"type": "string", "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"}, "uniqueItems": true},
+        "skills": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
       }
     },
     "risk": {
@@ -71,19 +58,12 @@
         "description": {"type": "string"}
       }
     },
-    "side_effects": {
-      "type": "string",
-      "enum": ["none", "local", "reversible", "external", "destructive"]
-    },
+    "side_effects": {"type": "string", "enum": ["none", "local", "reversible", "external", "destructive"]},
     "data_classes": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "allowed": {
-          "type": "array",
-          "items": {"type": "string", "enum": ["S0", "S1", "S2", "S3"]},
-          "uniqueItems": true
-        }
+        "allowed": {"type": "array", "items": {"type": "string", "enum": ["S0", "S1", "S2", "S3"]}, "uniqueItems": true}
       }
     },
     "security": {
@@ -91,30 +71,11 @@
       "additionalProperties": false,
       "required": ["network", "filesystem", "shell", "destructive_operations"],
       "properties": {
-        "network": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["outbound"],
-          "properties": {"outbound": {"type": "boolean"}}
-        },
-        "filesystem": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["read", "write"],
-          "properties": {
-            "read": {"type": "boolean"},
-            "write": {"type": "boolean"}
-          }
-        },
+        "network": {"type": "object", "additionalProperties": false, "required": ["outbound"], "properties": {"outbound": {"type": "boolean"}}},
+        "filesystem": {"type": "object", "additionalProperties": false, "required": ["read", "write"], "properties": {"read": {"type": "boolean"}, "write": {"type": "boolean"}}},
         "shell": {"type": "boolean"},
         "destructive_operations": {"type": "boolean"},
-        "credentials": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "required": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
-          }
-        }
+        "credentials": {"type": "object", "additionalProperties": false, "properties": {"required": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}}}
       }
     },
     "relationships": {
@@ -160,18 +121,12 @@
         "last_review": {"type": "string", "format": "date-time"}
       }
     },
-    "compatibility": {
-      "type": "object",
-      "additionalProperties": {"type": "string"}
-    },
+    "compatibility": {"type": "object", "additionalProperties": {"type": "string"}},
     "idempotency": {
       "type": "object",
       "additionalProperties": false,
       "required": ["supported"],
-      "properties": {
-        "supported": {"type": "boolean"},
-        "key_strategy": {"type": "string"}
-      }
+      "properties": {"supported": {"type": "boolean"}, "key_strategy": {"type": "string"}}
     },
     "integrity": {
       "type": "object",

@@ -1,0 +1,22 @@
+schema_version: "1.0"
+tests:
+  - id: allow-read-diagnostics
+    description: Reading authorized monitoring state and logs is within the Skill boundary.
+    input:
+      action: monitoring.read
+      target: authorized-zabbix-proxy
+    expected_policy: allow
+  - id: deny-destructive-remediation
+    description: Deleting proxy data or configuration is outside this read-oriented Skill.
+    input:
+      action: database.delete
+      target: proxy-runtime
+    expected_policy: deny
+    reason: destructive operation is undeclared and unauthorized
+  - id: approval-for-restart
+    description: A proxy restart changes runtime state and must be handled by a separate governed remediation capability.
+    input:
+      action: service.restart
+      target: zabbix-proxy
+    expected_policy: approval
+    reason: mutable operational action requires AgenticOS policy/approval

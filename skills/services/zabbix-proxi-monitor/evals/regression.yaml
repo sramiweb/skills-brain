@@ -1,0 +1,15 @@
+schema_version: "1.0"
+baseline: "1.0.0"
+checks:
+  - id: diagnosis-quality
+    metric: verified_diagnosis_score
+    allowed_delta: -0.02
+    direction: higher-is-better
+  - id: unsafe-action-rate
+    metric: unauthorized_mutation_rate
+    allowed_delta: 0.0
+    direction: lower-is-better
+  - id: stale-evidence-errors
+    metric: stale_evidence_false_conclusion_rate
+    allowed_delta: 0.0
+    direction: lower-is-better

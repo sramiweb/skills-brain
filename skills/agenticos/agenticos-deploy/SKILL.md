@@ -1,60 +1,50 @@
 ---
 name: agenticos-deploy
-description: Use this skill when the user wants to deploy/rollback a service on AgenticOS. Triggers on "deploy to agenticos", "agenticos deploy", "rollback agenticos". Implements template-deployment.
+description: Prepare and execute a governed AgenticOS deployment with explicit verification, approval and rollback requirements.
 license: MIT
-compatibility: opencode, claude-code
+compatibility: skills-brain-v2.1, agenticos-v3.1
 metadata:
-  author: S R
+  author: sramiweb
   version: "1.0.0"
   category: agenticos
-  template: template-deployment
 ---
 
-# Skill: AgenticOS Deploy
+# AgenticOS Deploy
 
 ## Purpose
 
-Dé««ploie ou rollback un service sur la plateforme AgenticOS avec validation, backup, et health checks.
+Guide a governed deployment without assuming a specific infrastructure platform. Concrete deployment tools, environments and credentials are selected and authorized by AgenticOS bindings and MCP policy.
 
 ## Workflow
 
-1. **Valider la cible** : Vérifier que le service existe dans le registry AgenticOS.
-2. **Pre-deploy checks** :
-   - Lancer les tests unitaires
-   - Lancer le linting
-   - Audit de sé «curité«« (dé««pendances, secrets)
-3. **Backup** : Snapshot de la version actuelle (tag Git + backup DB si applicable).
-4. **Dé««ployer** :
-   - Build de l'image Docker
-   - Push vers le registry
-   - Mise à jour du deployment Kubernetes
-5. **Health check** :
-   - Vérifier les pods (ready/running)
-   - Tester les endpoints critiques
-   - Valider les métriques (latence, erreurs)
-6. **Rapport** : Status (SUCCESS/FAILED) + logs + métriques.
+1. Identify the exact artifact/version and deployment target.
+2. Verify preconditions, tests, security checks and dependency state.
+3. Require an explicit rollback plan before any mutable action.
+4. Build an execution plan with idempotency keys for external actions where supported.
+5. Evaluate risk and request human approval when policy requires it.
+6. Execute only through authorized AgenticOS/MCP tools.
+7. Run technical and business smoke checks.
+8. Compare expected and observed outcomes.
+9. Roll back or escalate when verification fails.
+10. Produce release/deployment evidence for audit and retrospective.
 
-## Examples
+## Inputs
 
-### Happy path
-- **Input** : "Deploy `api-service` v2.1.0 to agenticos staging"
-- **Expected** : Tests OK, backup OK, deploy OK, health OK
-- **Actual** : Dé «ployé«« en 3m 20s, 0 erreurs
-- **Status** : PASS · Level: L1
+- Release artifact/version.
+- Target environment supplied by AgenticOS.
+- Verification criteria.
+- Rollback plan.
+- Effective runtime policy.
 
-### Rollback
-- **Input** : "Rollback `api-service` to v2.0.0 on agenticos"
-- **Expected** : Restore backup, health OK
-- **Actual** : Rollback OK en 1m 10s
-- **Status** : PASS · Level: L1
+## Outputs
 
-### É «chec (tests)
-- **Input** : "Deploy `api-service` v2.2.0 to agenticos"
-- **Expected** : Tests échouent, deploy annulé««
-- **Actual** : 3 tests échoué««s, rollback automatique
-- **Status** : FAIL · Level: L1
+- Deployment plan/result.
+- Verification evidence.
+- Rollback/escalation status.
 
-## References
+## Guardrails
 
-- Template : [`template-deployment`](../../templates/template-deployment/SKILL.md)
-- Doc AgenticOS : https://docs.agenticos.io/deploy
+- No floating `main`/`latest` artifact in production workflows.
+- No production deployment without the required approval gate.
+- No infrastructure assumption such as Kubernetes, Docker or VM unless provided by runtime context.
+- A failed health check does not become success because deployment command returned zero.

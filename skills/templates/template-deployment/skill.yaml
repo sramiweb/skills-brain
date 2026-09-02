@@ -1,39 +1,48 @@
-# Skills Brain v2 - Skill Manifest
-schema_version: "2.0"
-id: "templates/template-deployment"
-name: "Template Deployment"
-version: "1.0.0"
-status: "active"
-description: "Template for deploying applications with verification"
-category: "templates"
+schema_version: "2.1"
+id: template-deployment
+aliases:
+  - templates/template-deployment
+name: Template Deployment
+version: 1.0.0
+status: candidate
+description: Reusable template for deployment workflows with verification and rollback planning.
+category: templates
 capabilities:
-  - "templates.deployment"
-  - "deployment.template"
+  - deployment.template
+inputs:
+  - deployment context
+outputs:
+  - deployment workflow template
+requirements:
+  tool_capabilities:
+    - filesystem.read
+    - filesystem.write
 risk:
-  level: 2
-  description: "Template execution with user-defined risk"
-side_effects:
-  - "Generates deployment configurations"
-  - "May create cloud resources when executed"
+  level: 1
+  description: Produces local deployment configuration artifacts; execution permissions are not implied.
+side_effects: local
 security:
-  data_class: "internal"
-  permissions:
-    - "read:files"
-    - "write:files"
-provenance:
-  author: "sramiweb"
-  created: "2026-09-01"
-  source: "migration-p0"
+  network:
+    outbound: false
+  filesystem:
+    read: true
+    write: true
+  shell: false
+  destructive_operations: false
 relationships:
-  requires: []
-  optional: []
-  conflicts: []
-  extends: []
-  supersedes: []
-  composes: []
   related:
-    - "agenticos/agenticos-deploy"
+    - agenticos-deploy
 evaluation:
-  quality_score: 0.0
-  tests_passed: 0
-  tests_total: 0
+  golden_tasks: optional
+  minimum_score: 0.75
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  derived_from:
+    - legacy-v2.0-manifest
+  license: MIT
+  created_at: "2026-09-01T00:00:00Z"
+  last_review: "2026-09-02T07:00:00Z"

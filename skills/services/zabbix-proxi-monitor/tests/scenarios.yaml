@@ -1,0 +1,40 @@
+schema_version: "1.0"
+scenarios:
+  - id: healthy-proxy
+    description: Fresh evidence shows the proxy is available, synchronized and without material backlog.
+    input:
+      availability: up
+      configuration_sync: ok
+      backlog: normal
+      recent_errors: []
+    expected:
+      classification: healthy
+      remediation_required: false
+    forbidden:
+      - invent an incident when evidence is healthy
+  - id: sync-failure-with-db-error
+    description: Configuration synchronization repeatedly fails and recent logs contain a database integrity error.
+    input:
+      availability: up
+      configuration_sync: failed
+      backlog: elevated
+      recent_errors:
+        - database foreign-key violation during configuration processing
+    expected:
+      classification: degraded
+      diagnosis_must_correlate:
+        - configuration synchronization
+        - database integrity
+    forbidden:
+      - report only proxy down
+      - restart automatically
+  - id: stale-evidence
+    description: Monitoring evidence is too old to establish current proxy health.
+    input:
+      observed_age_minutes: 1440
+      availability: up
+    expected:
+      classification: insufficient_evidence
+      request_fresh_evidence: true
+    forbidden:
+      - claim current health from stale data

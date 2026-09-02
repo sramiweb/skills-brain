@@ -1,57 +1,47 @@
 ---
-name: "Agenticos Hermes Connect"
-version: "1.0.0"
-status: "active"
+name: agenticos-hermes-connect
+description: Integrate AgenticOS with Hermes as a governed cognitive runtime, using installed Skill snapshots and runtime policy.
+license: MIT
+compatibility: skills-brain-v2.1, agenticos-v3.1
+metadata:
+  author: sramiweb
+  version: "1.0.0"
+  category: agenticos
 ---
 
-# Agenticos Hermes Connect
-
-Connect AgenticOS to Hermes messaging protocol.
+# AgenticOS Hermes Connect
 
 ## Purpose
 
-This skill establishes secure connections between AgenticOS and the Hermes messaging protocol, enabling inter-agent communication and external integrations.
+Define how AgenticOS hands a governed mission context to a Hermes runtime worker. Hermes is treated as the reasoning/execution runtime, not as a standalone messaging protocol or source of permissions.
 
 ## Workflow
 
-1. **Handshake**: Establish secure connection with Hermes protocol
-2. **Authentication**: Authenticate with Hermes network
-3. **Channel Setup**: Create communication channels
-4. **Monitoring**: Monitor connection health
+1. Resolve the AgenticOS mission, agent and selected Skill snapshot.
+2. Verify the Skill is installed, checksummed and allowed for the tenant/runtime context.
+3. Build minimal context: mission, selected SKILL.md, relevant references, memory and tool contracts.
+4. Inject effective policy and allowed tool metadata into the worker context.
+5. Start or invoke the Hermes runtime through an AgenticOS-authorized integration.
+6. Allow Hermes to read only authorized Skills and call only authorized MCP tools.
+7. Return execution observations, tool evidence and outcome metadata to AgenticOS.
+8. AgenticOS performs final policy, verification, audit and learning steps.
 
 ## Inputs
 
-- `hermes_endpoint`: Hermes protocol endpoint URL
-- `auth_token`: Authentication token for Hermes
-- `channels`: List of channels to subscribe
+- Mission context.
+- Installed Skill identity/version/hash.
+- Effective policy.
+- Authorized tool contracts.
 
 ## Outputs
 
-- `connection_id`: Established connection identifier
-- `status`: Connection status (connected/disconnected)
-- `channels_active`: List of active channels
+- Hermes execution result.
+- Tool/observation evidence.
+- Outcome metadata for AgenticOS evaluation.
 
-## Examples
+## Guardrails
 
-```yaml
-skill: agenticos/hermes-connect
-inputs:
-  hermes_endpoint: "wss://hermes.example.com"
-  auth_token: "${HERMES_TOKEN}"
-  channels:
-    - "agents.general"
-    - "alerts.critical"
-```
-
-## Quality Gates
-
-- **Q0**: Structure ✓
-- **Q1**: YAML Syntax ✓
-- **Q2**: Schema Compliance ✓
-- **Q3**: Scenarios (TODO)
-- **Q4**: Golden Tasks (TODO)
-- **Q5**: Security Scan ✓
-
-## Changelog
-
-- **1.0.0** (2026-09-01): Initial v2 release
+- Hermes never grants itself new permissions.
+- Hermes never installs Skills directly from a floating Git branch.
+- Runtime-specific endpoints, credentials and mounts belong to AgenticOS configuration, not this canonical Skill.
+- AgenticOS remains the authority for approval, policy and audit.

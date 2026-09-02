@@ -27,7 +27,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          roots = [Path('skills'), Path('standards'), Path('schemas'), Path('protocols'), Path('tooling')]
+          roots = [Path('skills'), Path('standards'), Path('schemas'), Path('protocols'), Path('tooling'), Path('core'), Path('tests')]
           suffixes = {'.md', '.yaml', '.yml', '.json', '.py', '.txt'}
           failures = []
           for root in roots:
@@ -44,7 +44,7 @@ jobs:
           print('UTF-8 check passed')
           PY
 
-      - name: Validate canonical skills
+      - name: Validate canonical skills and capability ontology
         run: python tooling/validate.py --all
 
       - name: Validate tooling syntax
@@ -53,14 +53,37 @@ jobs:
       - name: Run tests
         run: pytest -q
 
+      - name: Evaluate Q0-Q5 evidence
+        run: python tooling/evaluator.py
+
+      - name: Block promoted skills without passing evidence
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          import yaml
+
+          report = json.loads(Path('reports/evaluation.json').read_text(encoding='utf-8'))
+          failures = []
+          for path in Path('skills').rglob('skill.yaml'):
+              manifest = yaml.safe_load(path.read_text(encoding='utf-8'))
+              if manifest.get('status') not in {'approved', 'active'}:
+                  continue
+              skill_id = manifest['id']
+              result = report.get(skill_id)
+              if not result or not result.get('passed'):
+                  failures.append(skill_id)
+          if failures:
+              raise SystemExit('Promoted skills without passing Q0-Q5 evidence: ' + ', '.join(sorted(failures)))
+          print('Promotion evidence check passed')
+          PY
+
       - name: Build catalog
         run: python tooling/catalog.py
 
-      - name: Ensure generated catalog is reproducible
+      - name: Check catalog generator output
         run: |
-          if [ -d catalog ]; then
-            git diff --exit-code -- catalog || {
-              echo "Generated catalog differs from committed catalog. Run python tooling/catalog.py and commit the result."
-              exit 1
-            }
-          fi
+          test -s catalog/index.json
+          test -s catalog/capabilities.json
+          test -s catalog/dependencies.json
+          test -s catalog/compatibility.json

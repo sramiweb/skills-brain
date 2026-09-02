@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Skills Brain Golden Task Definitions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "tasks"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "tasks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "mission", "expected", "criteria"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "mission": {"type": "string", "minLength": 1},
+          "expected": {},
+          "forbidden": {"type": "array", "items": {"type": "string"}},
+          "criteria": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 1}
+          }
+        }
+      }
+    }
+  }
+}

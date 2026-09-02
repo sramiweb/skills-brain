@@ -1,43 +1,58 @@
-# Skills Brain v2 - Skill Manifest
-schema_version: "2.0"
-id: "agenticos/agenticos-agent-create"
-name: "Agenticos Agent Create"
-version: "1.0.0"
-status: "active"
-description: "Create and configure new AgenticOS agents"
-category: "agenticos"
+schema_version: "2.1"
+id: agenticos-agent-create
+aliases:
+  - agenticos/agenticos-agent-create
+name: AgenticOS Agent Create
+version: 1.0.0
+status: candidate
+description: Design and configure new AgenticOS agents under explicit governance and permission boundaries.
+category: agenticos
 capabilities:
-  - "agenticos.agent-create"
-  - "agent.creation"
-  - "configuration.agent"
+  - agenticos.agent.create
+  - agent.configuration
+inputs:
+  - agent purpose
+  - required capabilities
+  - governance constraints
+outputs:
+  - agent definition proposal
+  - configuration proposal
+requirements:
+  tool_capabilities:
+    - filesystem.read
+    - filesystem.write
+    - shell.execute
+    - agent.create
+  skills:
+    - agenticos-agent-audit
 risk:
   level: 3
-  description: "Creates new agents with permissions"
-side_effects:
-  - "Creates new agent instances"
-  - "Configures agent permissions"
-  - "Registers agents with orchestrator"
+  description: May create agent configuration and permission proposals; activation remains controlled by AgenticOS.
+side_effects: reversible
 security:
-  data_class: "internal"
-  permissions:
-    - "read:files"
-    - "write:files"
-    - "execute:commands"
-    - "create:agents"
-provenance:
-  author: "sramiweb"
-  created: "2026-09-01"
-  source: "migration-p0"
+  network:
+    outbound: false
+  filesystem:
+    read: true
+    write: true
+  shell: true
+  destructive_operations: false
 relationships:
-  requires: []
   optional:
-    - "agenticos/agenticos-agent-audit"
-  conflicts: []
-  extends: []
-  supersedes: []
-  composes: []
-  related: []
+    - agenticos-agent-audit
 evaluation:
-  quality_score: 0.0
-  tests_passed: 0
-  tests_total: 0
+  golden_tasks: required
+  minimum_score: 0.90
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  derived_from:
+    - legacy-v2.0-manifest
+  license: MIT
+  created_at: "2026-09-01T00:00:00Z"
+  last_review: "2026-09-02T07:00:00Z"
+compatibility:
+  agenticos: ">=3.1"

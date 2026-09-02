@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Skills Brain Capability Ontology",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "capabilities", "tool_capabilities"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/entry"}
+    },
+    "tool_capabilities": {
+      "type": "object",
+      "additionalProperties": {"$ref": "#/$defs/entry"}
+    }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description", "domain", "status"],
+      "properties": {
+        "description": {"type": "string", "minLength": 1},
+        "domain": {"type": "string", "minLength": 1},
+        "status": {"type": "string", "enum": ["active", "reserved", "deprecated"]},
+        "superseded_by": {"type": "string"}
+      }
+    }
+  }
+}

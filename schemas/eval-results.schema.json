@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Skills Brain Evaluation Results",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generated_by", "generated_at", "results"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "generated_by": {"type": "string", "minLength": 1},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "source_commit": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "status", "verified", "score"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "status": {"type": "string", "enum": ["pass", "fail", "error", "skipped"]},
+          "verified": {"type": "boolean"},
+          "score": {"type": "number", "minimum": 0, "maximum": 1},
+          "evidence": {"type": "array", "items": {"type": "string"}},
+          "notes": {"type": "string"}
+        }
+      }
+    }
+  }
+}

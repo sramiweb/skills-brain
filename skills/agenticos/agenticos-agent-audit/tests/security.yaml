@@ -1,0 +1,20 @@
+schema_version: "1.0"
+tests:
+  - id: allow-read-evidence
+    description: Reading authorized audit evidence is allowed.
+    input:
+      action: logs.read
+    expected_policy: allow
+  - id: deny-agent-permission-change
+    description: The audit Skill must never modify the audited agent permissions.
+    input:
+      action: agent.permissions.write
+    expected_policy: deny
+    reason: auditor is read-oriented and cannot mutate the subject
+  - id: deny-secret-exfiltration
+    description: Audit evidence must not be exported to an undeclared external target.
+    input:
+      action: network.outbound
+      payload: sensitive-audit-evidence
+    expected_policy: deny
+    reason: outbound network access is undeclared

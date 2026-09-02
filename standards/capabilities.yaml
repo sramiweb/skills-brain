@@ -1,0 +1,214 @@
+schema_version: "1.0"
+
+capabilities:
+  agenticos.agent.audit:
+    description: Audit AgenticOS agent behavior and decisions.
+    domain: agenticos
+    status: active
+  agenticos.agent.create:
+    description: Design and configure governed AgenticOS agents.
+    domain: agenticos
+    status: active
+  agenticos.deploy:
+    description: Orchestrate governed AgenticOS deployments.
+    domain: agenticos
+    status: active
+  agenticos.hermes.connect:
+    description: Integrate AgenticOS with Hermes runtime workers.
+    domain: agenticos
+    status: active
+  agenticos.migration.run:
+    description: Plan and run governed migrations in AgenticOS contexts.
+    domain: agenticos
+    status: active
+  agenticos.security.scan:
+    description: Perform AgenticOS-focused security scanning.
+    domain: agenticos
+    status: active
+  verification.audit:
+    description: Produce evidence-based audit findings.
+    domain: verification
+    status: active
+  verification.harness:
+    description: Verify an execution against explicit success criteria.
+    domain: verification
+    status: active
+  verification.security:
+    description: Verify security requirements and findings.
+    domain: verification
+    status: active
+  agent.configuration:
+    description: Design agent configuration under explicit constraints.
+    domain: agent
+    status: active
+  deployment.orchestrate:
+    description: Coordinate a deployment workflow.
+    domain: deployment
+    status: active
+  deployment.migrate:
+    description: Coordinate deployment-related migrations.
+    domain: deployment
+    status: active
+  deployment.template:
+    description: Produce a reusable deployment workflow template.
+    domain: deployment
+    status: active
+  runtime.hermes.integrate:
+    description: Integrate with a Hermes-compatible runtime.
+    domain: runtime
+    status: active
+  database.migrate:
+    description: Plan or execute a governed database migration.
+    domain: database
+    status: active
+  security.scan:
+    description: Scan a target for security weaknesses.
+    domain: security
+    status: active
+  security.audit.template:
+    description: Produce a reusable security audit workflow template.
+    domain: security
+    status: active
+  zabbix.proxy.diagnose:
+    description: Diagnose Zabbix proxy health and synchronization issues.
+    domain: observability
+    status: active
+  monitoring.health.analyze:
+    description: Analyze monitoring-system health evidence.
+    domain: observability
+    status: active
+
+  market.competitor.analyze:
+    description: Compare competitors using evidence-backed criteria.
+    domain: market
+    status: reserved
+  market.competitor.monitor:
+    description: Detect meaningful competitor changes over time.
+    domain: market
+    status: reserved
+  market.product.scan:
+    description: Analyze products in a defined market landscape.
+    domain: market
+    status: reserved
+  pricing.analyze:
+    description: Analyze pricing structures, changes and positioning.
+    domain: pricing
+    status: reserved
+  product.discover:
+    description: Discover evidence-backed product problems and opportunities.
+    domain: product
+    status: reserved
+  product.feature.specify:
+    description: Convert a validated problem into an implementable feature specification.
+    domain: product
+    status: reserved
+  product.roadmap.prioritize:
+    description: Prioritize roadmap candidates using evidence, impact, risk and effort.
+    domain: product
+    status: reserved
+  customer.health.analyze:
+    description: Assess customer health from observable usage and business signals.
+    domain: customer
+    status: reserved
+  customer.cohort.analyze:
+    description: Analyze customer cohorts and retention behavior.
+    domain: customer
+    status: reserved
+  customer.churn.analyze:
+    description: Analyze churn signals, causes and cohorts.
+    domain: customer
+    status: reserved
+  revenue.saas.metrics:
+    description: Calculate and interpret standard SaaS revenue metrics.
+    domain: revenue
+    status: reserved
+  revenue.subscription.analyze:
+    description: Analyze subscription states, movements and plan economics.
+    domain: revenue
+    status: reserved
+  growth.funnel.analyze:
+    description: Analyze acquisition, activation and conversion funnels.
+    domain: growth
+    status: reserved
+  growth.experiment.design:
+    description: Design measurable growth experiments with guardrails.
+    domain: growth
+    status: reserved
+  content.linkedin.write:
+    description: Draft LinkedIn content from evidence and brand constraints.
+    domain: content
+    status: reserved
+  sales.lead.qualify:
+    description: Qualify B2B leads against an explicit ICP and evidence.
+    domain: sales
+    status: reserved
+  sales.email.personalize:
+    description: Personalize outbound email within approved messaging constraints.
+    domain: sales
+    status: reserved
+  engineering.codebase.analyze:
+    description: Analyze a codebase structure, conventions and change surface.
+    domain: engineering
+    status: reserved
+  engineering.code.review:
+    description: Independently review code for correctness, security and regression risk.
+    domain: engineering
+    status: reserved
+  engineering.release.readiness:
+    description: Assess whether a release satisfies defined readiness gates.
+    domain: engineering
+    status: reserved
+  sre.application.health:
+    description: Diagnose application health from technical and business signals.
+    domain: sre
+    status: reserved
+  database.postgres.diagnose:
+    description: Diagnose PostgreSQL health and performance using evidence-first methods.
+    domain: database
+    status: reserved
+
+tool_capabilities:
+  filesystem.read:
+    description: Read allowed files.
+    domain: filesystem
+    status: active
+  filesystem.write:
+    description: Write allowed files.
+    domain: filesystem
+    status: active
+  logs.read:
+    description: Read logs from an authorized source.
+    domain: observability
+    status: active
+  shell.execute:
+    description: Execute an authorized shell or command wrapper.
+    domain: shell
+    status: active
+  network.outbound:
+    description: Perform authorized outbound network access.
+    domain: network
+    status: active
+  agent.create:
+    description: Create an agent definition through an authorized runtime API.
+    domain: agent
+    status: active
+  deployment.execute:
+    description: Execute an authorized deployment action.
+    domain: deployment
+    status: active
+  runtime.hermes.protocol:
+    description: Communicate with a Hermes-compatible runtime protocol.
+    domain: runtime
+    status: active
+  database.write:
+    description: Perform an authorized database mutation.
+    domain: database
+    status: active
+  security.scan:
+    description: Execute an authorized security scanner.
+    domain: security
+    status: active
+  monitoring.read:
+    description: Read monitoring-system state and metrics.
+    domain: observability
+    status: active

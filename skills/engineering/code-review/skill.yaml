@@ -1,0 +1,43 @@
+schema_version: "2.1"
+id: code-review
+name: Code Review
+version: 0.1.0
+status: candidate
+description: Independently review code changes for correctness, security, maintainability, tests and regression risk.
+category: engineering
+capabilities:
+  - engineering.code.review
+inputs:
+  - code diff or change set
+  - repository conventions
+  - test evidence
+outputs:
+  - review verdict
+  - findings
+  - mandatory changes
+requirements:
+  tool_capabilities:
+    - filesystem.read
+risk:
+  level: 1
+  description: Read-oriented independent review; no merge or repository mutation.
+side_effects: none
+security:
+  network:
+    outbound: false
+  filesystem:
+    read: true
+    write: false
+  shell: false
+  destructive_operations: false
+evaluation:
+  golden_tasks: required
+  minimum_score: 0.90
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT
+  created_at: "2026-09-02T07:00:00Z"
