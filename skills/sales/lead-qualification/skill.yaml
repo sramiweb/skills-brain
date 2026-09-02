@@ -1,0 +1,44 @@
+schema_version: "2.1"
+id: lead-qualification
+name: Lead Qualification
+version: 0.1.0
+status: candidate
+description: Qualify B2B leads against an explicit ICP using traceable evidence, uncertainty and disqualification reasons.
+category: sales
+capabilities:
+  - sales.lead.qualify
+inputs:
+  - lead evidence
+  - ideal customer profile
+  - qualification criteria
+outputs:
+  - qualification decision
+  - evidence and confidence
+  - missing information
+risk:
+  level: 1
+  description: Analytical lead scoring; it does not contact prospects or modify CRM state.
+side_effects: none
+data_classes:
+  allowed:
+    - S1
+    - S2
+security:
+  network:
+    outbound: false
+  filesystem:
+    read: false
+    write: false
+  shell: false
+  destructive_operations: false
+evaluation:
+  golden_tasks: required
+  minimum_score: 0.88
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT
+  created_at: "2026-09-02T08:00:00Z"
