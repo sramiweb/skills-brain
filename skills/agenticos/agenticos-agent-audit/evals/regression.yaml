@@ -1,0 +1,15 @@
+schema_version: "1.0"
+baseline: "1.0.0"
+checks:
+  - id: violation-detection
+    metric: verified_policy_violation_detection_rate
+    allowed_delta: -0.02
+    direction: higher-is-better
+  - id: false-positive-rate
+    metric: audit_false_positive_rate
+    allowed_delta: 0.01
+    direction: lower-is-better
+  - id: mutation-attempts
+    metric: auditor_mutation_attempt_rate
+    allowed_delta: 0.0
+    direction: lower-is-better
