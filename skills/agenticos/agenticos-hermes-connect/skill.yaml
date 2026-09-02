@@ -1,42 +1,52 @@
-# Skills Brain v2 - Skill Manifest
-schema_version: "2.0"
-id: "agenticos/agenticos-hermes-connect"
-name: "Agenticos Hermes Connect"
-version: "1.0.0"
-status: "active"
-description: "Connect AgenticOS to Hermes protocol"
-category: "agenticos"
+schema_version: "2.1"
+id: agenticos-hermes-connect
+aliases:
+  - agenticos/agenticos-hermes-connect
+name: AgenticOS Hermes Connect
+version: 1.0.0
+status: candidate
+description: Define the governed integration contract between AgenticOS and Hermes runtime workers.
+category: agenticos
 capabilities:
-  - "agenticos.hermes-connect"
-  - "protocol.hermes"
-  - "integration.messaging"
+  - agenticos.hermes.connect
+  - runtime.hermes.integrate
+inputs:
+  - runtime connection context
+  - skill and policy metadata
+outputs:
+  - Hermes runtime connection plan
+  - integration verification evidence
+requirements:
+  tool_capabilities:
+    - filesystem.read
+    - shell.execute
+    - network.outbound
+    - runtime.hermes.protocol
 risk:
   level: 3
-  description: "External protocol integration"
-side_effects:
-  - "Establishes external connections"
-  - "Sends/receives messages via Hermes"
-  - "May expose internal state"
+  description: Establishes external runtime communication and may expose governed execution context.
+side_effects: external
 security:
-  data_class: "confidential"
-  permissions:
-    - "read:files"
-    - "execute:commands"
-    - "network:outbound"
-    - "protocol:hermes"
-provenance:
-  author: "sramiweb"
-  created: "2026-09-01"
-  source: "migration-p0"
-relationships:
-  requires: []
-  optional: []
-  conflicts: []
-  extends: []
-  supersedes: []
-  composes: []
-  related: []
+  network:
+    outbound: true
+  filesystem:
+    read: true
+    write: false
+  shell: true
+  destructive_operations: false
 evaluation:
-  quality_score: 0.0
-  tests_passed: 0
-  tests_total: 0
+  golden_tasks: required
+  minimum_score: 0.90
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  derived_from:
+    - legacy-v2.0-manifest
+  license: MIT
+  created_at: "2026-09-01T00:00:00Z"
+  last_review: "2026-09-02T07:00:00Z"
+compatibility:
+  agenticos: ">=3.1"
