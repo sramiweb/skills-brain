@@ -49,6 +49,8 @@ tooling/evaluator.py
 
 The Skills Brain repository does not require a specific runner. AgenticOS, another agent runtime, a deterministic harness or a controlled human workflow may execute the run request.
 
+For the reference AgenticOS path, use `tooling/qualification.py` and `adapters/agenticos/evaluation.py`. Normative runtime separation is documented in `standards/runtime-qualification.md`.
+
 ## Prepare
 
 `tooling/eval_harness.py prepare` binds a run to:
@@ -60,13 +62,27 @@ The Skills Brain repository does not require a specific runner. AgenticOS, anoth
 - exact task/check IDs;
 - a unique `run_id`.
 
-Example:
+Low-level example:
 
 ```bash
 python tooling/eval_harness.py prepare \
   skills/agenticos/agenticos-agent-audit \
   --gate Q4
 ```
+
+For AgenticOS runtime qualification, prefer:
+
+```bash
+python tooling/qualification.py prepare \
+  skills/engineering/codebase-analysis \
+  --gate Q4 \
+  --tenant klerbot \
+  --agent klerbot-coder \
+  --data-class S2 \
+  --model glm-5.3:cloud
+```
+
+This creates both the canonical `request.json` and a non-authorizing `agenticos-plan.json` bound to the same exact Skill package.
 
 Run requests are generated under `reports/eval-runs/` by default so preparing an evaluation does not mutate the immutable Skill package hash.
 
@@ -83,7 +99,24 @@ Runner observations contain only:
 - evidence references;
 - runtime/model metadata when useful.
 
+The AgenticOS reference runner first produces `schemas/agenticos-eval-observation.schema.json`; `adapters/agenticos/evaluation.py` converts it to canonical runner-results **without semantic scoring**.
+
+A successful worker exit only proves execution completed. It does not prove the Golden Task passed.
+
 Do not copy tenant secrets, credentials, private prompts or raw customer data into the canonical Skills Brain repository merely to satisfy evaluation evidence.
+
+## AgenticOS runtime identity check
+
+For an AgenticOS qualification, the observation must prove the exact upstream:
+
+```text
+Skill ID
++ version
++ package_sha256
++ source commit when bound
+```
+
+The adapter fails closed when these values differ from the evaluation request. Runtime reputation, model quality or successful exit code cannot compensate for a package mismatch.
 
 ## Independent verification
 
@@ -107,24 +140,50 @@ For Q5 the normalized check must verify the declared baseline, metric, direction
 
 Missing checks are not treated as success.
 
+## Verified Q5 baseline
+
+A regression definition that says only `baseline: skill@version` is not enough to calculate a real delta. Q5 runtime qualification therefore requires a separately measured and independently verified baseline artifact conforming to:
+
+```text
+schemas/regression-baseline.schema.json
+```
+
+Default location:
+
+```text
+<skill>/evals/regression-baseline.json
+```
+
+The artifact records exact metric values and evidence references. `tooling/qualification.py prepare --gate Q5` refuses to proceed when:
+
+- the baseline artifact is missing;
+- `verified` or `verification.independent` is not true;
+- its `baseline_id` does not match `regression.yaml`;
+- a requested regression metric has no verified baseline value.
+
+The baseline SHA256 is bound into the evaluation request. Finalization refuses a baseline that changes after preparation.
+
+For a first historically qualified Skill with no trustworthy older metrics, the correct action is to measure the historical version now under a controlled benchmark or defer Q5. **Synthetic historical metric values are forbidden.**
+
 ## Finalize
 
-`tooling/eval_harness.py finalize` validates request, runner and verification artifacts, then recomputes package and definition hashes.
+`tooling/eval_harness.py finalize` validates request, runner and verification artifacts, then recomputes package and definition hashes. The governed `tooling/qualification.py finalize` additionally checks a bound Q5 baseline before delegating to the harness.
 
 Example:
 
 ```bash
-python tooling/eval_harness.py finalize \
-  skills/agenticos/agenticos-agent-audit \
-  --request reports/eval-runs/agenticos-agent-audit/<run>/request.json \
-  --runner-results /secure/path/runner-results.json \
-  --verification /secure/path/verification.json
+python tooling/qualification.py finalize \
+  skills/engineering/codebase-analysis \
+  --request /secure/eval/request.json \
+  --runner-results /secure/eval/runner-results.json \
+  --verification /secure/eval/verification.json
 ```
 
 Finalization fails closed if:
 
 - the Skill changed since `prepare`;
 - the evaluation definition changed;
+- a bound Q5 baseline changed;
 - run IDs differ;
 - runner/verifier IDs do not exactly cover the request;
 - criterion or forbidden-rule coverage is incomplete;
@@ -176,4 +235,5 @@ This standard does not:
 - deploy a Skill;
 - accept self-verification;
 - infer success from missing evidence;
+- invent Q5 baseline metrics;
 - allow runtime feedback to modify a production Skill directly.
