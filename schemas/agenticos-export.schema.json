@@ -1,12 +1,12 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://raw.githubusercontent.com/sramiweb/skills-brain/main/schemas/agenticos-export.schema.json",
-  "title": "Skills Brain AgenticOS Export Contract v1.0",
+  "title": "Skills Brain AgenticOS Export Contract v1.1",
   "type": "object",
   "additionalProperties": false,
   "required": ["contract_version", "source", "skill", "governance", "integrity"],
   "properties": {
-    "contract_version": {"const": "1.0"},
+    "contract_version": {"enum": ["1.0", "1.1"]},
     "source": {
       "type": "object",
       "additionalProperties": false,
@@ -20,7 +20,7 @@
     "skill": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "version", "status", "description", "capabilities", "requirements"],
+      "required": ["id", "version", "status", "description", "capabilities", "requirements", "contracts"],
       "properties": {
         "id": {"type": "string", "minLength": 1},
         "aliases": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
@@ -34,6 +34,15 @@
           "properties": {
             "tool_capabilities": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
             "skills": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+          }
+        },
+        "contracts": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["inputs", "outputs"],
+          "properties": {
+            "inputs": {"type": "array", "items": {"type": "object"}},
+            "outputs": {"type": "array", "items": {"type": "object"}}
           }
         },
         "compatibility": {"type": "object", "additionalProperties": {"type": "string"}}
