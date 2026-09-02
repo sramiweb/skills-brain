@@ -1,0 +1,22 @@
+schema_version: '2.1'
+id: escalation-priority
+name: escalation-priority
+version: 1.0.0
+status: candidate
+description: Methode de priorisation et escalade des decisions critiques.
+category: executive
+kind: method-generic
+capabilities:
+- escalation.priority
+risk:
+  level: 1
+  description: Read-only methodology skill.
+side_effects: none
+data_classes:
+  allowed:
+  - S1
+  - S2
+provenance:
+  origin: skills-brain
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT

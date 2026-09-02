@@ -1,0 +1,22 @@
+schema_version: '2.1'
+id: test-strategy
+name: test-strategy
+version: 1.0.0
+status: candidate
+description: Methode de definition de la strategie de tests.
+category: engineering
+kind: method-generic
+capabilities:
+- test.strategy
+risk:
+  level: 1
+  description: Read-only methodology skill.
+side_effects: none
+data_classes:
+  allowed:
+  - S1
+  - S2
+provenance:
+  origin: skills-brain
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT

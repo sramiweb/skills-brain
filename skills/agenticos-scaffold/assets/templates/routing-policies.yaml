@@ -1,0 +1,38 @@
+# routing-policies.yaml — chargé par l'orchestrateur AVANT dispatch
+# Test d'honnêteté obligatoire : chaque politique a un test négatif prouvant qu'elle bloque.
+# Une politique déclarée mais non chargée = finding P1 d'audit (écart déclaré/exécuté).
+version: 1
+
+policies:
+  # Bloque toute tâche contenant un secret ou une référence à une clé d'environnement
+  - name: block-secrets
+    match:
+      any: [secret_pattern, env_key_reference]
+    action: deny
+    audit: true                    # journaliser type + position, JAMAIS la valeur
+
+  # Données S1 : modèle local uniquement
+  - name: s1-local-only
+    match:
+      data_class: S1
+    require:
+      force_local: true
+    action: deny_if_violated       # refus + audit si modèle non local
+    audit: true
+
+  # Actions externes : validation humaine bloquante, liée au hash de l'action
+  - name: external-action-validation
+    match:
+      tools: [email_send, telegram_send, "payment_*"]
+    require:
+      human_validation: required
+    action: hold_for_approval      # la reformulation de l'action invalide l'approbation
+    audit: true
+
+output:
+  # check_output branché sur TOUS les canaux de livraison : contenu interdit → bloqué + audité
+  check_output: [telegram, email]
+
+budgets:
+  per_tenant_monthly: true
+  alert_threshold: 0.8             # alerte à 80 % de consommation

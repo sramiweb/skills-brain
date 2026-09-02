@@ -1,0 +1,22 @@
+schema_version: '2.1'
+id: klerbot-roadmap-method
+name: klerbot-roadmap-method
+version: 1.0.0
+status: candidate
+description: Methode de construction et priorisation de la roadmap Klerbot.
+category: klerbot
+kind: context-tenant
+capabilities:
+- klerbot.roadmap.method
+risk:
+  level: 1
+  description: Read-only methodology skill.
+side_effects: none
+data_classes:
+  allowed:
+  - S1
+  - S2
+provenance:
+  origin: skills-brain
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT

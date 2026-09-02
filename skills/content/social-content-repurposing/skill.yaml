@@ -1,0 +1,22 @@
+schema_version: '2.1'
+id: social-content-repurposing
+name: social-content-repurposing
+version: 1.0.0
+status: candidate
+description: Methode d adaptation d un contenu cross-canal.
+category: content
+kind: method-generic
+capabilities:
+- social.content.repurposing
+risk:
+  level: 1
+  description: Read-only methodology skill.
+side_effects: none
+data_classes:
+  allowed:
+  - S1
+  - S2
+provenance:
+  origin: skills-brain
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT

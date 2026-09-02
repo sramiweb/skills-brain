@@ -1,0 +1,22 @@
+schema_version: '2.1'
+id: klerbot-code-conventions
+name: klerbot-code-conventions
+version: 1.0.0
+status: candidate
+description: Conventions de code specifiques au produit Klerbot.
+category: klerbot
+kind: context-tenant
+capabilities:
+- klerbot.code.conventions
+risk:
+  level: 1
+  description: Read-only methodology skill.
+side_effects: none
+data_classes:
+  allowed:
+  - S1
+  - S2
+provenance:
+  origin: skills-brain
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT

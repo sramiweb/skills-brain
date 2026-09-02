@@ -1,0 +1,24 @@
+# Scan de secrets en CI — bloquant (principe P6 : aucun secret en clair)
+# Couvre le working tree ET l'historique git complet.
+# Preuve attendue : un commit introduisant un faux secret fait échouer la CI.
+---
+name: secret-scan
+on: [push, pull_request]
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # historique complet — un secret déjà commité reste une fuite
+
+      - name: Scan gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_ENABLE_COMMENTS: "true"
+
+# Équivalent GitLab CI :
+#   secret_scan:
+#     image: zricethezav/gitleaks:latest
+#     script: gitleaks git --redact --verbose .

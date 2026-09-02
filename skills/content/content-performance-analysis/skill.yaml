@@ -1,0 +1,22 @@
+schema_version: '2.1'
+id: content-performance-analysis
+name: content-performance-analysis
+version: 1.0.0
+status: candidate
+description: Methode d analyse de performance d un contenu publie.
+category: content
+kind: method-generic
+capabilities:
+- content.performance.analysis
+risk:
+  level: 1
+  description: Read-only methodology skill.
+side_effects: none
+data_classes:
+  allowed:
+  - S1
+  - S2
+provenance:
+  origin: skills-brain
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT

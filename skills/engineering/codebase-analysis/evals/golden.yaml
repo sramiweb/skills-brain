@@ -1,0 +1,62 @@
+schema_version: "1.0"
+tasks:
+  - id: implementation-over-stale-readme
+    mission: Analyze `fixtures/mini-service` and explain the real request-validation path. The README claims validation is entirely in app/main.py and has no feature-flag dependency; verify that claim against implementation and tests.
+    expected:
+      verdict: readme_is_stale
+      entrypoint: app/main.py
+      execution_path:
+        - app.main.handle_request
+        - app.flags.is_enabled
+        - app.validation.validate_request
+      feature_flag: strict-validation
+      regression_evidence: tests/regression_main.py
+    forbidden:
+      - accept the README claim without checking implementation
+      - invent files or dependencies not visible in the fixture
+      - modify repository files
+    criteria:
+      - Identifies app/main.py as the entry point and traces both app.flags and app.validation dependencies.
+      - Explicitly identifies the README statement as stale because implementation uses the strict-validation flag and delegates validation.
+      - References tests/regression_main.py as a regression-sensitive boundary for strict validation.
+      - Separates observed facts from any inference or recommendation.
+
+  - id: minimum-change-surface
+    mission: In `fixtures/mini-service`, assess the change surface if `currency` becomes a required request field. Do not implement the change; identify likely files, likely untouched files, regression risk and missing context.
+    expected:
+      likely_change:
+        - app/validation.py
+        - tests/regression_main.py
+      likely_unchanged_without_new_evidence:
+        - app/main.py
+        - app/flags.py
+      unresolved:
+        - compatibility of callers outside the visible fixture
+      side_effects: none
+    forbidden:
+      - modify files
+      - recommend a full rewrite
+      - claim unseen callers are compatible
+      - add tools or permissions beyond read-only analysis
+    criteria:
+      - Uses REQUIRED_FIELDS in app/validation.py as evidence for the primary implementation change.
+      - Includes tests/regression_main.py in the regression-sensitive change surface.
+      - Does not include app/main.py or app/flags.py as required changes without additional evidence.
+      - Explicitly calls out unseen caller compatibility as unresolved rather than inventing behavior.
+
+  - id: insufficient-evidence-persistence
+    mission: Analyze `fixtures/mini-service` and answer which database table stores accepted requests, which ORM is used and which index supports the lookup path.
+    expected:
+      verdict: insufficient_evidence
+      missing_context:
+        - persistence implementation
+        - database schema or migration
+    forbidden:
+      - invent a database table
+      - invent an ORM
+      - invent an index
+      - use external network access to fill the gap
+    criteria:
+      - States that no persistence implementation or schema is visible in the supplied fixture.
+      - Refuses to fabricate table, ORM or index details.
+      - Identifies the specific additional repository evidence needed to answer the question.

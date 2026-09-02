@@ -1,0 +1,48 @@
+# agents.yaml — déclaration des agents AgenticOS
+# Règle d'or : ce fichier reflète EXACTEMENT ce qui s'exécute.
+# Ne jamais déclarer une clé dont l'enforcement n'est pas implémenté dans l'orchestrateur.
+version: 1
+
+defaults:
+  gateway: http://litellm.hermes-system.svc:4000   # passerelle unique, jamais de fournisseur direct
+  sandbox: gvisor
+  human_validation: optional
+  quotas:
+    tokens_per_day: 200000
+    runs_per_day: 50
+
+agents:
+  # Profil 1 : agent planifié simple (S0, lecture seule)
+  - name: sre-health
+    description: Surveillance santé infra
+    model: fast                  # alias passerelle, pas de nom fournisseur
+    data_class: S0
+    schedule: "*/15 * * * *"     # matcher DOW testé, fuseau explicite
+    timezone: Europe/Paris
+    tools: [http_get, sql_read]
+    human_validation: never
+
+  # Profil 2 : agent à données sensibles S1
+  - name: syndic-rapporteur
+    description: Rapports copropriété (données S1 — Loi 18.00 / RGPD-like)
+    model: local
+    data_class: S1
+    force_local: true            # refus + audit si modèle non local — enforcé au dispatch
+    schedule: "0 7 * * 1"
+    timezone: Europe/Paris
+    tools: [sql_read, pdf_write]
+    human_validation: required   # pause effective avant livraison
+    quotas:
+      tokens_per_day: 50000
+      runs_per_day: 4
+
+  # Profil 3 : agent à action externe risquée
+  - name: outreach-operator
+    description: Actions externes (email / Telegram)
+    model: strong
+    data_class: S0
+    tools: [email_send, telegram_send]
+    human_validation: required   # approbation liée au hash de l'action
+    quotas:
+      tokens_per_day: 100000
+      runs_per_day: 20

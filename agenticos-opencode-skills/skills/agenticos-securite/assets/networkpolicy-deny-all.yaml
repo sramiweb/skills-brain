@@ -1,0 +1,47 @@
+# NetworkPolicy AgenticOS — deny-all par défaut + ouvertures explicites
+# À appliquer sur les namespaces hermes-agents et hermes-data.
+# Preuve attendue : depuis un pod agent, curl vers Internet → timeout ;
+# curl vers la passerelle :4000 → OK.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+  namespace: hermes-agents
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: agents-egress-minimal
+  namespace: hermes-agents
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    # Passerelle LLM unique — jamais de fournisseur direct
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-system
+      ports:
+        - protocol: TCP
+          port: 4000
+    # Couche données (PostgreSQL, Redis, Qdrant)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: hermes-data
+      ports:
+        - protocol: TCP
+          port: 5432
+        - protocol: TCP
+          port: 6379
+        - protocol: TCP
+          port: 6333
+    # DNS
+    - ports:
+        - protocol: UDP
+          port: 53

@@ -1,0 +1,22 @@
+schema_version: '2.1'
+id: change-log
+name: change-log
+version: 1.0.0
+status: candidate
+description: Methode de redaction de release notes et changelog.
+category: engineering
+kind: method-generic
+capabilities:
+- change.log
+risk:
+  level: 1
+  description: Read-only methodology skill.
+side_effects: none
+data_classes:
+  allowed:
+  - S1
+  - S2
+provenance:
+  origin: skills-brain
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT

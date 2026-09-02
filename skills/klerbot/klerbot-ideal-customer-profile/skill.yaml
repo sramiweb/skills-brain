@@ -1,0 +1,22 @@
+schema_version: '2.1'
+id: klerbot-ideal-customer-profile
+name: klerbot-ideal-customer-profile
+version: 1.0.0
+status: candidate
+description: Profil client ideal (ICP) de Klerbot.
+category: klerbot
+kind: context-tenant
+capabilities:
+- klerbot.ideal.customer.profile
+risk:
+  level: 1
+  description: Read-only methodology skill.
+side_effects: none
+data_classes:
+  allowed:
+  - S1
+  - S2
+provenance:
+  origin: skills-brain
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT

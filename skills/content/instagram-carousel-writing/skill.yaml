@@ -1,0 +1,22 @@
+schema_version: '2.1'
+id: instagram-carousel-writing
+name: instagram-carousel-writing
+version: 1.0.0
+status: candidate
+description: Methode de redaction de carrousels Instagram.
+category: content
+kind: method-generic
+capabilities:
+- instagram.carousel.writing
+risk:
+  level: 1
+  description: Read-only methodology skill.
+side_effects: none
+data_classes:
+  allowed:
+  - S1
+  - S2
+provenance:
+  origin: skills-brain
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT
