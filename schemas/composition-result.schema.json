@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/sramiweb/skills-brain/main/schemas/composition-result.schema.json",
+  "title": "Skills Brain Composition Result v1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["composer_version", "authorization", "requested_capabilities", "status", "missing_capabilities", "selected_skills", "execution_order", "coverage", "combined_requirements", "composite_risk", "composite_side_effects", "blocking_reasons"],
+  "properties": {
+    "composer_version": {"const": "1.0"},
+    "authorization": {"const": "not_granted"},
+    "requested_capabilities": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "status": {"type": "string", "enum": ["composed", "unresolved"]},
+    "missing_capabilities": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "selected_skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "version", "risk_level", "side_effects", "required_tool_capabilities", "dependency"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "version": {"type": ["string", "null"]},
+          "risk_level": {"type": "integer", "minimum": 0, "maximum": 4},
+          "side_effects": {"type": "string", "enum": ["none", "local", "reversible", "external", "destructive", "unknown"]},
+          "required_tool_capabilities": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+          "dependency": {"type": "boolean"}
+        }
+      }
+    },
+    "execution_order": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "coverage": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["owner", "providers"],
+        "properties": {
+          "owner": {"type": ["string", "null"]},
+          "providers": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+        }
+      }
+    },
+    "combined_requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tool_capabilities"],
+      "properties": {
+        "tool_capabilities": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "composite_risk": {"type": "integer", "minimum": 0, "maximum": 4},
+    "composite_side_effects": {"type": "string", "enum": ["none", "local", "reversible", "external", "destructive", "unknown"]},
+    "blocking_reasons": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "rejected_candidates": {"type": "array", "items": {"type": "object"}}
+  }
+}
