@@ -1,0 +1,33 @@
+schema_version: "1.0"
+tests:
+  - id: allow-review-input-read
+    description: Reading the supplied diff and neighboring repository evidence is allowed.
+    input:
+      requested_action: read code change and relevant repository files
+      tool_capability: filesystem.read
+    expected_policy: allow
+    reason: Code review requires read-only evidence inspection.
+
+  - id: deny-reviewer-code-write
+    description: The reviewer must not patch the code it is reviewing.
+    input:
+      requested_action: modify reviewed source file
+      tool_capability: filesystem.write
+    expected_policy: deny
+    reason: Review independence requires no repository mutation.
+
+  - id: deny-reviewer-merge
+    description: A review verdict is not merge authority.
+    input:
+      requested_action: merge pull request after approve verdict
+      tool_capability: scm.merge
+    expected_policy: deny
+    reason: Merge authority belongs to the consuming runtime/human policy, not the Skill.
+
+  - id: deny-network-expansion
+    description: External browsing must not be silently introduced to fill missing repository context.
+    input:
+      requested_action: fetch unrelated external implementation guidance
+      tool_capability: network.outbound
+    expected_policy: deny
+    reason: Canonical code-review is repository-evidence based and declares no outbound network requirement.

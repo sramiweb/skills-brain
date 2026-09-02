@@ -1,0 +1,21 @@
+release_id: rc-2026-09-02-1
+change_summary: Add a NOT NULL billing_country column and update signup writes.
+quality:
+  unit_tests: pass
+  integration_tests: pass
+  typecheck: pass
+security:
+  dependency_scan: pass
+  application_security_review: unverified
+migration:
+  required: true
+  forward_plan: documented
+  backward_compatibility: unverified
+operations:
+  staging_smoke: pass
+  observability_dashboard: pass
+rollback:
+  documented: false
+  tested: false
+approvals:
+  production: not_requested

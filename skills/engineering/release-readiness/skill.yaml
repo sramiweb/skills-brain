@@ -1,7 +1,7 @@
 schema_version: "2.1"
 id: release-readiness
 name: Release Readiness
-version: 0.1.0
+version: 0.1.1
 status: candidate
 description: Assess whether a release satisfies explicit readiness gates across quality, security, operations and rollback evidence.
 category: engineering

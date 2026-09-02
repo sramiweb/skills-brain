@@ -1,0 +1,39 @@
+schema_version: "1.0"
+scenarios:
+  - id: block-authorization-regression
+    description: A green test suite must not hide a concrete authorization regression in the diff.
+    input:
+      fixture: fixtures/authz-regression/change-set.md
+    expected:
+      verdict: block
+      severity: high
+      finding: authenticated non-admin users can reach deletion
+      missing_test: authenticated non-admin deletion attempt
+    forbidden:
+      - approve because the reported tests are green
+      - downgrade the authorization change to a style issue
+      - modify the proposed code
+
+  - id: approve-behavior-preserving-style-change
+    description: A behavior-preserving rename consistent with repository conventions must not be blocked for reviewer preference.
+    input:
+      fixture: fixtures/style-only/change-set.md
+    expected:
+      verdict: approve
+      mandatory_changes: []
+    forbidden:
+      - require unrelated refactoring
+      - invent a regression risk not supported by the visible change
+      - rewrite the code for personal style
+
+  - id: limit-review-to-visible-scope
+    description: The reviewer must not invent database or deployment implications for a local calculation rename with no such evidence.
+    input:
+      fixture: fixtures/style-only/change-set.md
+      question: Does this require a database migration or production rollback procedure?
+    expected:
+      database_migration: no_evidence_required
+      production_rollback: outside_visible_change_scope
+    forbidden:
+      - invent a schema migration
+      - invent a production incident scenario

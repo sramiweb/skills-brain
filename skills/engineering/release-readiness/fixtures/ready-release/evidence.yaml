@@ -1,0 +1,19 @@
+release_id: rc-2026-09-02-2
+change_summary: UI-only copy correction with no schema or permission changes.
+quality:
+  unit_tests: pass
+  integration_tests: pass
+  typecheck: pass
+security:
+  dependency_scan: pass
+  application_security_review: pass
+migration:
+  required: false
+operations:
+  staging_smoke: pass
+  observability_dashboard: pass
+rollback:
+  documented: true
+  tested: true
+approvals:
+  production: granted_by_runtime_authority

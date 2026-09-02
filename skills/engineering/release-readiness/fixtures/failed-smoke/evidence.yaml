@@ -1,0 +1,20 @@
+release_id: rc-2026-09-02-3
+change_summary: API refactor with complete unit and security evidence but failing staging smoke.
+quality:
+  unit_tests: pass
+  integration_tests: pass
+  typecheck: pass
+security:
+  dependency_scan: pass
+  application_security_review: pass
+migration:
+  required: false
+operations:
+  staging_smoke: fail
+  staging_smoke_detail: POST /api/import returns HTTP 500
+  observability_dashboard: pass
+rollback:
+  documented: true
+  tested: true
+approvals:
+  production: not_requested
