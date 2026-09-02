@@ -36,7 +36,7 @@ Tool  = WITH WHAT to act
 
 ```text
 skills-brain/
-├── standards/          # Normative lifecycle, capabilities, resolution, integrity, deliberation, learning
+├── standards/          # Normative lifecycle, capabilities, evaluation, resolution, integrity, deliberation, learning
 ├── schemas/            # Machine contracts
 ├── core/               # Governance meta-skills
 ├── skills/             # Canonical skill packages
@@ -135,10 +135,44 @@ A runtime may maintain a separate deployment lifecycle such as available, instal
 | Q1 | Static quality |
 | Q2 | Scenario tests |
 | Q3 | Security / sandbox |
-| Q4 | Golden tasks |
-| Q5 | Regression |
+| Q4 | Golden Task execution |
+| Q5 | Regression evidence |
 
 Q4 and Q5 require **verified execution evidence**. Definition files alone never count as PASS. CI blocks `approved` or `active` Skills without the required evidence.
+
+### Q4/Q5 evaluation harness
+
+The canonical evidence workflow is:
+
+```text
+PREPARE
+  -> external EXECUTION
+  -> independent VERIFICATION
+  -> FINALIZE
+  -> evaluator re-validation
+```
+
+Prepare a content-addressed Golden Task run:
+
+```bash
+python tooling/eval_harness.py prepare \
+  skills/agenticos/agenticos-agent-audit \
+  --gate Q4
+```
+
+The external runner returns sanitized observations. A different human, deterministic verifier or independent model checks the exact expected result, every criterion and every forbidden behavior. Finalize only after that independent verification:
+
+```bash
+python tooling/eval_harness.py finalize \
+  skills/agenticos/agenticos-agent-audit \
+  --request reports/eval-runs/agenticos-agent-audit/<run>/request.json \
+  --runner-results /secure/path/runner-results.json \
+  --verification /secure/path/verification.json
+```
+
+The generated result is bound to Skill ID/version, `package_sha256` and the exact evaluation-definition hash. Editing the Skill or Golden/Regression definition invalidates stale evidence automatically.
+
+See `standards/evaluation.md` and the `schemas/eval-*.json` contracts.
 
 ## Supply-chain integrity
 
@@ -212,12 +246,14 @@ Currently present:
 
 - `skill-creator`
 - `skill-reviewer`
+- `skill-security-reviewer`
 - `skill-evaluator`
 - `skill-resolver`
+- `skill-composer`
 - `skill-deliberator`
 - `skill-retrospective`
 
-Composition and specialized security review remain future work.
+The resolver selects eligible candidates; the composer may build a minimum sufficient multi-Skill plan from eligible candidates but always returns runtime authorization as `not_granted`.
 
 ## Klerbot Golden Tenant
 
@@ -240,6 +276,7 @@ pytest -q
 python tooling/evaluator.py
 python tooling/catalog.py
 python tooling/resolver.py examples/resolution-request.json
+python tooling/eval_harness.py --help
 ```
 
 ## Roadmap
@@ -248,12 +285,12 @@ python tooling/resolver.py examples/resolution-request.json
 |---|---|---|
 | P0 | Canonical structure + duplicate cleanup | Done |
 | P1 | Strict v2.1 schema + CI + capability ontology | Done |
-| P2 | Evidence-based Q0-Q5 + execution harness | In progress |
+| P2 | Evidence-based Q0-Q5 + evaluation harness | Harness implemented; external runtime qualification in progress |
 | P3 | Supply-chain integrity + AgenticOS adapter | Done |
-| P4 | Catalog + capability resolver | Resolver v1 implemented; advanced composition pending |
+| P4 | Catalog + capability resolver/composer | Resolver v1 + composer guidance implemented; runtime multi-Skill execution pending |
 | P5 | Outcome-driven learning | Foundation done |
 | P6 | Deliberation protocols | Foundation done |
-| P7 | Composition, reputation, additional adapters | Planned |
+| P7 | Reputation, additional adapters and advanced composition | Planned |
 
 See `SPECIFICATION.md` for the normative architecture and rules.
 
