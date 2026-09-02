@@ -1,7 +1,7 @@
 schema_version: "2.1"
 id: code-review
 name: Code Review
-version: 0.1.0
+version: 0.1.1
 status: candidate
 description: Independently review code changes for correctness, security, maintainability, tests and regression risk.
 category: engineering
