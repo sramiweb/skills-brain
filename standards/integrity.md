@@ -24,25 +24,18 @@ The `integrity` field is excluded from manifest/package hashing to avoid a self-
 
 ## Package hash
 
-Only package source files are included. Generated evaluation results and transient files are excluded.
+The package hash is **fail-closed by inclusion**: every regular file below the Skill directory is included unless it matches an explicit exclusion below. This prevents new directories such as `scripts/`, `resources/`, `fixtures/` or `assets/` from silently escaping integrity coverage.
 
-Included by default:
-
-- `SKILL.md`;
-- canonicalized `skill.yaml`;
-- `README.md` when present;
-- `CHANGELOG.md` when present;
-- `tests/**`;
-- `evals/**`, except generated `*-results.json` files;
-- `references/**`.
-
-Excluded:
+Explicitly excluded:
 
 - `.git/**`;
-- caches and bytecode;
-- generated `*-results.json` evaluation evidence;
-- OS/editor temporary files;
-- the `integrity` field itself.
+- `__pycache__/**`, `.pytest_cache/**`, `.mypy_cache/**`, `.ruff_cache/**`;
+- Python bytecode (`*.pyc`, `*.pyo`);
+- `.DS_Store` and editor backup files ending in `~`;
+- generated evaluation evidence named `*-results.json`;
+- the optional top-level `integrity` field inside `skill.yaml`.
+
+Generated evaluation result files are excluded because they describe runtime evidence rather than immutable package source. Their authenticity must be governed separately by the evaluation pipeline.
 
 Files are processed in lexicographic order using relative POSIX paths. For each file, the package stream appends:
 
