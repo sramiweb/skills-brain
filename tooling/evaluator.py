@@ -1,111 +1,207 @@
 #!/usr/bin/env python3
-"""Skills Brain Evaluator v2 - Évalue les skills via Q0-Q5"""
-import json, os
+"""Evidence-based Skills Brain evaluator (Q0-Q5).
+
+The evaluator never fabricates execution evidence. Q4/Q5 require result artifacts
+produced by an external evaluation harness before they can pass.
+"""
+
+import json
+import sys
 from pathlib import Path
+
 try:
+    import jsonschema
     import yaml
-except ImportError:
-    os.system("pip install pyyaml")
-    import yaml
+except ImportError as exc:
+    print("Missing dependencies. Install with: pip install -r requirements-dev.txt", file=sys.stderr)
+    raise SystemExit(2) from exc
+
+ROOT = Path(__file__).resolve().parent.parent
+SKILLS_ROOT = ROOT / "skills"
 
 QUALITY_GATES = {
-    "Q0": {"name": "Structure", "weight": 0.10},
-    "Q1": {"name": "Syntaxe YAML", "weight": 0.15},
-    "Q2": {"name": "Schema Compliance", "weight": 0.20},
-    "Q3": {"name": "Golden Tasks", "weight": 0.25},
-    "Q4": {"name": "Documentation", "weight": 0.15},
-    "Q5": {"name": "Security", "weight": 0.15},
+    "Q0": {"name": "Schema", "weight": 0.20},
+    "Q1": {"name": "Static quality", "weight": 0.15},
+    "Q2": {"name": "Scenario definitions", "weight": 0.15},
+    "Q3": {"name": "Security policy tests", "weight": 0.15},
+    "Q4": {"name": "Golden task execution", "weight": 0.20},
+    "Q5": {"name": "Regression evidence", "weight": 0.15},
 }
 
-def load_skill_yaml(p):
-    f = p / "skill.yaml"
-    return yaml.safe_load(open(f, encoding="utf-8")) if f.exists() else None
 
-def check_q0(p):
-    r = ["skill.yaml", "SKILL.md", "README.md"]
-    m = [x for x in r if not (p / x).exists()]
-    return len(m) == 0, m
+def _yaml(path: Path):
+    with path.open("r", encoding="utf-8") as handle:
+        return yaml.safe_load(handle)
 
-def check_q1(p):
+
+def _json(path: Path):
+    with path.open("r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+def _validate_document(path: Path, schema_name: str):
+    if not path.exists():
+        return False, [f"Missing {path.relative_to(ROOT)}"]
     try:
-        return load_skill_yaml(p) is not None, []
-    except Exception as e:
-        return False, [str(e)]
-
-def check_q2(p, schema_path):
-    try:
-        import jsonschema
-        schema = json.load(open(schema_path, encoding="utf-8"))
-        jsonschema.validate(load_skill_yaml(p), schema)
+        data = _yaml(path) if path.suffix in {".yaml", ".yml"} else _json(path)
+        schema = _json(ROOT / "schemas" / schema_name)
+        jsonschema.validate(data, schema)
         return True, []
-    except ImportError:
-        d = load_skill_yaml(p) or {}
-        m = [f for f in ["name","version","status","capabilities"] if f not in d]
-        return len(m) == 0, m
-    except Exception as e:
-        return False, [str(e)]
+    except Exception as exc:
+        return False, [str(exc)]
 
-def check_q3(p):
-    g = p / "tests" / "golden"
-    return (True, []) if not g.exists() else (True, [])
 
-def check_q4(p):
-    r = p / "README.md"
-    if not r.exists():
-        return False, ["Missing README.md"]
-    c = r.read_text(encoding="utf-8")
-    m = [s for s in ["## Usage", "## Inputs", "## Outputs"] if s not in c]
-    return len(m) == 0, m
+def check_q0(skill_dir: Path):
+    from validate import validate_skill
 
-def check_q5(p):
+    issues = validate_skill(skill_dir)
+    return not issues, issues
+
+
+def check_q1(skill_dir: Path):
+    manifest = _yaml(skill_dir / "skill.yaml")
+    issues = []
+    risk = int(manifest["risk"]["level"])
+    side_effects = manifest["side_effects"]
+    security = manifest["security"]
+    tools = set(manifest.get("requirements", {}).get("tool_capabilities", []))
+
+    if security["destructive_operations"] and risk < 3:
+        issues.append("destructive_operations=true requires risk >= 3")
+    if side_effects == "destructive" and risk < 3:
+        issues.append("side_effects=destructive requires risk >= 3")
+    if security["network"]["outbound"] and "network.outbound" not in tools:
+        issues.append("network.outbound security requirement must be declared as a tool capability")
+    if security["filesystem"]["write"] and "filesystem.write" not in tools:
+        issues.append("filesystem.write permission must be declared as a tool capability")
+    if security["shell"] and "shell.execute" not in tools:
+        issues.append("shell=true requires shell.execute tool capability")
+    if manifest["status"] in {"approved", "active"} and manifest["evaluation"]["golden_tasks"] != "required":
+        issues.append("approved/active skills must require golden tasks")
+
+    return not issues, issues
+
+
+def check_q2(skill_dir: Path):
+    return _validate_document(skill_dir / "tests" / "scenarios.yaml", "scenarios.schema.json")
+
+
+def check_q3(skill_dir: Path):
+    manifest = _yaml(skill_dir / "skill.yaml")
+    path = skill_dir / "tests" / "security.yaml"
+    if manifest["risk"]["level"] < 2 and not path.exists():
+        return True, ["Security test definition optional for risk < 2"]
+    return _validate_document(path, "security-tests.schema.json")
+
+
+def _result_gate(skill_dir: Path, definition_name: str, result_name: str, definition_schema: str, result_schema: str, optional: bool = False):
+    definition_path = skill_dir / "evals" / definition_name
+    result_path = skill_dir / "evals" / result_name
+
+    if optional and not definition_path.exists():
+        return True, [f"{definition_name} optional for this skill"]
+
+    ok, issues = _validate_document(definition_path, definition_schema)
+    if not ok:
+        return False, issues
+    ok, issues = _validate_document(result_path, result_schema)
+    if not ok:
+        return False, issues + ["Execution evidence is required; do not hand-author PASS results"]
+
+    data = _json(result_path)
+    failed = [item.get("id", "unknown") for item in data.get("results", []) if item.get("status") != "pass" or not item.get("verified", False)]
+    if failed:
+        return False, [f"Unverified or failing result(s): {', '.join(failed)}"]
     return True, []
 
-def evaluate_skill(p, schema_path):
-    res, score = {}, 0.0
-    for q, fn in [("Q0", check_q0), ("Q1", check_q1), ("Q2", lambda x,y: check_q2(x,schema_path)), ("Q3", check_q3), ("Q4", check_q4), ("Q5", check_q5)]:
-        ok, iss = (fn(p) if q != "Q2" else fn(p, schema_path)) if q == "Q2" else (check_q2(p, schema_path) if q == "Q2" else (check_q0(p) if q == "Q0" else (check_q1(p) if q == "Q1" else (check_q3(p) if q == "Q3" else (check_q4(p) if q == "Q4" else check_q5(p))))))
-        res[q] = {"passed": ok, "issues": iss}
-        if ok:
-            score += QUALITY_GATES[q]["weight"]
-    return {"score": round(score, 2), "max_score": 1.0, "quality_gates": res, "passed": score >= 0.80}
+
+def check_q4(skill_dir: Path):
+    manifest = _yaml(skill_dir / "skill.yaml")
+    mode = manifest["evaluation"]["golden_tasks"]
+    if mode == "none":
+        return True, ["Golden tasks explicitly disabled"]
+    return _result_gate(
+        skill_dir,
+        "golden.yaml",
+        "golden-results.json",
+        "golden.schema.json",
+        "eval-results.schema.json",
+        optional=(mode == "optional"),
+    )
+
+
+def check_q5(skill_dir: Path):
+    manifest = _yaml(skill_dir / "skill.yaml")
+    required = manifest["status"] in {"approved", "active"} or manifest["risk"]["level"] >= 3
+    return _result_gate(
+        skill_dir,
+        "regression.yaml",
+        "regression-results.json",
+        "regression.schema.json",
+        "eval-results.schema.json",
+        optional=not required,
+    )
+
+
+def evaluate_skill(skill_dir: Path):
+    checks = {
+        "Q0": check_q0,
+        "Q1": check_q1,
+        "Q2": check_q2,
+        "Q3": check_q3,
+        "Q4": check_q4,
+        "Q5": check_q5,
+    }
+    results = {}
+    score = 0.0
+    for gate, fn in checks.items():
+        try:
+            passed, issues = fn(skill_dir)
+        except Exception as exc:
+            passed, issues = False, [str(exc)]
+        results[gate] = {"passed": passed, "issues": issues}
+        if passed:
+            score += QUALITY_GATES[gate]["weight"]
+
+    manifest = _yaml(skill_dir / "skill.yaml")
+    minimum = float(manifest["evaluation"]["minimum_score"])
+    mandatory = ["Q0", "Q1", "Q2"]
+    if manifest["risk"]["level"] >= 2:
+        mandatory.append("Q3")
+    if manifest["evaluation"]["golden_tasks"] == "required":
+        mandatory.append("Q4")
+    if manifest["status"] in {"approved", "active"} or manifest["risk"]["level"] >= 3:
+        mandatory.append("Q5")
+
+    passed = score >= minimum and all(results[gate]["passed"] for gate in mandatory)
+    return {
+        "score": round(score, 2),
+        "minimum_score": minimum,
+        "mandatory_gates": mandatory,
+        "quality_gates": results,
+        "passed": passed,
+    }
+
+
+def iter_skill_dirs():
+    return sorted({path.parent for path in SKILLS_ROOT.rglob("skill.yaml")})
+
 
 def evaluate_all_skills():
-    skills_dir = Path(__file__).parent.parent / "skills"
-    schema_path = Path(__file__).parent.parent / "schemas" / "skill.schema.json"
-    reports_dir = Path(__file__).parent.parent / "reports"
+    reports_dir = ROOT / "reports"
     reports_dir.mkdir(exist_ok=True)
     all_results = {}
-    for cat in ["agenticos", "templates", "services"]:
-        cat_dir = skills_dir / cat
-        if not cat_dir.exists():
-            continue
-        for skill_dir in cat_dir.iterdir():
-            if not skill_dir.is_dir() or skill_dir.name.startswith("."):
-                continue
-            skill_id = f"{cat}/{skill_dir.name}"
-            result = evaluate_skill(skill_dir, schema_path)
-            all_results[skill_id] = result
-            print(f"{skill_id}: {result['score']:.2f}/1.00 {'✓' if result['passed'] else '✗'}")
-    json.dump(all_results, open(reports_dir / "evaluation.json", "w", encoding="utf-8"), indent=2, ensure_ascii=False)
-    print(f"\n✅ Rapport: {reports_dir}/evaluation.json")
+    for skill_dir in iter_skill_dirs():
+        manifest = _yaml(skill_dir / "skill.yaml")
+        skill_id = manifest.get("id", str(skill_dir.relative_to(SKILLS_ROOT)))
+        result = evaluate_skill(skill_dir)
+        all_results[skill_id] = result
+        mark = "PASS" if result["passed"] else "FAIL"
+        print(f"{skill_id}: {result['score']:.2f}/{result['minimum_score']:.2f} {mark}")
+    with (reports_dir / "evaluation.json").open("w", encoding="utf-8") as handle:
+        json.dump(all_results, handle, indent=2, ensure_ascii=False)
     return all_results
 
+
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) > 1 and sys.argv[1] == "--all":
-        evaluate_all_skills()
-    else:
-        skills_dir = Path(__file__).parent.parent / "skills"
-        schema_path = Path(__file__).parent.parent / "schemas" / "skill.schema.json"
-        for cat in ["agenticos", "templates", "services"]:
-            cat_dir = skills_dir / cat
-            if cat_dir.exists():
-                for skill_dir in cat_dir.iterdir():
-                    if skill_dir.is_dir() and not skill_dir.name.startswith("."):
-                        skill_id = f"{cat}/{skill_dir.name}"
-                        result = evaluate_skill(skill_dir, schema_path)
-                        print(f"\n{skill_id}:\n  Score: {result['score']:.2f}/1.00\n  Passed: {result['passed']}")
-                        for gate, data in result["quality_gates"].items():
-                            print(f"  {'✓' if data['passed'] else '✗'} {gate}: {data['issues'] or 'OK'}")
-                        break
-                break
+    evaluate_all_skills()
