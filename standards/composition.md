@@ -1,4 +1,4 @@
-# Skills Brain — Governed Composition v1.0
+# Skills Brain — Governed Composition v1.1
 
 ## Purpose
 
@@ -12,7 +12,8 @@ Mission capabilities
   -> minimum sufficient Skill set
   -> dependency closure
   -> conflict / supersession checks
-  -> dependency order
+  -> typed handoff resolution
+  -> dependency + data-flow order
   -> combined logical requirements
   -> composite risk / side effects
   -> authorization: not_granted
@@ -28,6 +29,7 @@ The composer may state what a plan requires. It may not grant:
 - network access;
 - filesystem mounts;
 - approval;
+- data-transfer authorization;
 - execution authority.
 
 The union of `tool_capabilities` is a **planning requirement only**. A runtime such as AgenticOS must still calculate effective permissions from its local bindings and policies.
@@ -73,6 +75,22 @@ The composer closes dependencies recursively. Missing dependencies, dependency c
 
 Dependencies must execute before dependants in the returned topological order.
 
+## Typed handoffs
+
+A selected Skill may declare typed `contracts.inputs` and `contracts.outputs`.
+
+For every required input with `source: skill`, the composer must find a selected eligible producer whose:
+
+- capability matches `from_capabilities`;
+- output `schema_id` exactly matches the consumer input `schema_id`;
+- output `data_class` is explicitly accepted by the consumer.
+
+A valid handoff creates a producer-to-consumer ordering edge. Missing providers, schema mismatch and data-class mismatch fail closed.
+
+The composer never infers schema compatibility from names or descriptions and never downgrades a data class implicitly.
+
+Detailed rules are in `standards/handoffs.md`.
+
 ## Conflicts and supersession
 
 If a selected Skill declares another selected Skill in `relationships.conflicts`, the composition is invalid.
@@ -92,15 +110,15 @@ Ownership is a planning responsibility, not authorization. The owner is chosen o
 
 ## Composite risk and side effects
 
-The v1 composite risk is at least the maximum declared risk of any member.
+The composite risk is at least the maximum declared risk of any member.
 
-The v1 composite side-effect class is the strongest declared member class according to:
+The composite side-effect class is the strongest declared member class according to:
 
 ```text
 none < local < reversible < external < destructive < unknown
 ```
 
-The composer does not invent an extra risk increase without explicit evidence of a new cross-Skill effect. Future versions may add typed data-handoff contracts and explicit cross-Skill risk rules.
+The composer does not invent an extra risk increase without explicit evidence of a new cross-Skill effect. Typed handoffs expose data-flow evidence that future policy layers may use for additional risk or approval rules.
 
 ## Failure semantics
 
@@ -112,11 +130,13 @@ Examples:
 - a required Skill is absent;
 - a required Skill is ineligible;
 - selected Skills conflict;
-- a dependency cycle exists;
+- a dependency or handoff cycle exists;
 - dependency closure exceeds `max_skills`;
-- superseded and replacement Skills would coexist.
+- superseded and replacement Skills would coexist;
+- a required typed handoff has no exact schema provider;
+- producer output data class is not accepted by the consumer.
 
-Missing capabilities are never replaced by semantically adjacent capabilities.
+Missing capabilities and missing payload contracts are never replaced by semantically adjacent alternatives.
 
 ## Runtime contract
 
@@ -128,11 +148,14 @@ Every result must contain:
 }
 ```
 
-A consuming runtime may accept the plan, reject it, further restrict it, require debate/approval, or resolve it differently according to local policy.
+A consuming runtime may accept the plan, reject it, further restrict it, require debate/approval, or resolve it differently according to local policy. Typed handoff metadata does not itself authorize the runtime payload transfer.
 
 ## Reference implementation
 
 - `tooling/composer.py`
 - `schemas/composition-request.schema.json`
 - `schemas/composition-result.schema.json`
+- `schemas/skill.schema.json`
+- `standards/handoffs.md`
 - `tests/test_composer.py`
+- `tests/test_handoff_contracts.py`
