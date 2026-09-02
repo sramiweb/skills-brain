@@ -2,7 +2,7 @@
 """Deterministic Skills Brain package hashing.
 
 Implements standards/integrity.md. The tool is read-only and never writes hashes
-into the source package.
+into the source package. All package files are hashed unless explicitly excluded.
 """
 
 from __future__ import annotations
@@ -18,8 +18,9 @@ except ImportError as exc:
     raise SystemExit("Missing dependency PyYAML. Install requirements-dev.txt") from exc
 
 GENERATED_RESULT_SUFFIX = "-results.json"
-SOURCE_ROOTS = ("tests", "evals", "references")
-OPTIONAL_ROOT_FILES = ("README.md", "CHANGELOG.md")
+EXCLUDED_DIR_NAMES = {".git", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
+EXCLUDED_FILE_NAMES = {".DS_Store"}
+EXCLUDED_SUFFIXES = {".pyc", ".pyo"}
 
 
 def sha256(data: bytes) -> str:
@@ -41,36 +42,34 @@ def canonical_manifest_bytes(skill_dir: Path) -> bytes:
     ).encode("utf-8")
 
 
+def is_excluded(skill_dir: Path, path: Path) -> bool:
+    rel = path.relative_to(skill_dir)
+    if any(part in EXCLUDED_DIR_NAMES for part in rel.parts[:-1]):
+        return True
+    if path.name in EXCLUDED_FILE_NAMES:
+        return True
+    if path.suffix in EXCLUDED_SUFFIXES:
+        return True
+    if path.name.endswith("~"):
+        return True
+    # Evaluation evidence is runtime-generated and intentionally does not change
+    # the immutable source package identity.
+    if path.name.endswith(GENERATED_RESULT_SUFFIX):
+        return True
+    return False
+
+
 def included_files(skill_dir: Path) -> list[Path]:
-    files: list[Path] = []
-    required = skill_dir / "SKILL.md"
-    manifest = skill_dir / "skill.yaml"
-    for path in (required, manifest):
+    required = [skill_dir / "SKILL.md", skill_dir / "skill.yaml"]
+    for path in required:
         if not path.is_file():
             raise FileNotFoundError(path)
-        files.append(path)
 
-    for filename in OPTIONAL_ROOT_FILES:
-        path = skill_dir / filename
-        if path.is_file():
-            files.append(path)
-
-    for root_name in SOURCE_ROOTS:
-        root = skill_dir / root_name
-        if not root.exists():
-            continue
-        for path in root.rglob("*"):
-            if not path.is_file():
-                continue
-            rel = path.relative_to(skill_dir).as_posix()
-            if path.name.endswith(GENERATED_RESULT_SUFFIX):
-                continue
-            if "__pycache__" in path.parts or path.suffix in {".pyc", ".pyo"}:
-                continue
-            if rel.endswith("~") or path.name in {".DS_Store"}:
-                continue
-            files.append(path)
-
+    files = [
+        path
+        for path in skill_dir.rglob("*")
+        if path.is_file() and not is_excluded(skill_dir, path)
+    ]
     return sorted(set(files), key=lambda p: p.relative_to(skill_dir).as_posix())
 
 
