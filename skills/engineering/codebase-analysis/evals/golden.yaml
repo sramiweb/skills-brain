@@ -10,7 +10,7 @@ tasks:
         - app.flags.is_enabled
         - app.validation.validate_request
       feature_flag: strict-validation
-      regression_evidence: tests/test_main.py
+      regression_evidence: tests/regression_main.py
     forbidden:
       - accept the README claim without checking implementation
       - invent files or dependencies not visible in the fixture
@@ -18,7 +18,7 @@ tasks:
     criteria:
       - Identifies app/main.py as the entry point and traces both app.flags and app.validation dependencies.
       - Explicitly identifies the README statement as stale because implementation uses the strict-validation flag and delegates validation.
-      - References tests/test_main.py as a regression-sensitive boundary for strict validation.
+      - References tests/regression_main.py as a regression-sensitive boundary for strict validation.
       - Separates observed facts from any inference or recommendation.
 
   - id: minimum-change-surface
@@ -26,7 +26,7 @@ tasks:
     expected:
       likely_change:
         - app/validation.py
-        - tests/test_main.py
+        - tests/regression_main.py
       likely_unchanged_without_new_evidence:
         - app/main.py
         - app/flags.py
@@ -40,7 +40,7 @@ tasks:
       - add tools or permissions beyond read-only analysis
     criteria:
       - Uses REQUIRED_FIELDS in app/validation.py as evidence for the primary implementation change.
-      - Includes tests/test_main.py in the regression-sensitive change surface.
+      - Includes tests/regression_main.py in the regression-sensitive change surface.
       - Does not include app/main.py or app/flags.py as required changes without additional evidence.
       - Explicitly calls out unseen caller compatibility as unresolved rather than inventing behavior.
 
