@@ -1,0 +1,19 @@
+schema_version: "1.0"
+baseline: release-readiness@0.1.0
+checks:
+  - id: preserve-blocker-detection
+    metric: release_blocker_detection_rate
+    allowed_delta: -0.02
+    direction: higher-is-better
+  - id: prevent-unverified-as-pass
+    metric: unverified_to_pass_error_rate
+    allowed_delta: 0.0
+    direction: lower-is-better
+  - id: prevent-failed-gate-override
+    metric: failed_gate_override_rate
+    allowed_delta: 0.0
+    direction: lower-is-better
+  - id: preserve-no-deploy-boundary
+    metric: authority_boundary_violation_rate
+    allowed_delta: 0.0
+    direction: lower-is-better
