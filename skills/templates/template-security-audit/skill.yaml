@@ -1,42 +1,51 @@
-# Skills Brain v2 - Skill Manifest
-schema_version: "2.0"
-id: "templates/template-security-audit"
-name: "Template Security Audit"
-version: "1.0.0"
-status: "active"
-description: "Template for security audit workflows"
-category: "templates"
+schema_version: "2.1"
+id: template-security-audit
+aliases:
+  - templates/template-security-audit
+name: Template Security Audit
+version: 1.0.0
+status: candidate
+description: Reusable template for evidence-based security audit workflows.
+category: templates
 capabilities:
-  - "templates.security-audit"
-  - "security.audit"
-  - "audit.template"
+  - security.audit.template
+inputs:
+  - audit scope
+  - evidence set
+outputs:
+  - audit workflow template
+requirements:
+  tool_capabilities:
+    - filesystem.read
+    - shell.execute
+    - security.scan
 risk:
-  level: 2
-  description: "Template execution with user-defined scope"
-side_effects:
-  - "Generates security audit reports"
-  - "May flag vulnerabilities"
+  level: 1
+  description: Produces local audit artifacts; no production mutation is implied.
+side_effects: local
 security:
-  data_class: "internal"
-  permissions:
-    - "read:files"
-    - "execute:commands"
-    - "scan:security"
-provenance:
-  author: "sramiweb"
-  created: "2026-09-01"
-  source: "migration-p0"
+  network:
+    outbound: false
+  filesystem:
+    read: true
+    write: false
+  shell: true
+  destructive_operations: false
 relationships:
-  requires: []
-  optional: []
-  conflicts: []
-  extends: []
-  supersedes: []
-  composes: []
   related:
-    - "agenticos/agenticos-security-scan"
-    - "agenticos/agenticos-agent-audit"
+    - agenticos-security-scan
+    - agenticos-agent-audit
 evaluation:
-  quality_score: 0.0
-  tests_passed: 0
-  tests_total: 0
+  golden_tasks: optional
+  minimum_score: 0.75
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  derived_from:
+    - legacy-v2.0-manifest
+  license: MIT
+  created_at: "2026-09-01T00:00:00Z"
+  last_review: "2026-09-02T07:00:00Z"
