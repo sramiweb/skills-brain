@@ -53,6 +53,32 @@ jobs:
       - name: Run tests
         run: pytest -q
 
+      - name: Smoke test governed runtime qualification planning
+        run: |
+          python tooling/qualification.py status skills/engineering/codebase-analysis
+          python tooling/qualification.py prepare \
+            skills/engineering/codebase-analysis \
+            --gate Q4 \
+            --tenant klerbot \
+            --agent klerbot-coder \
+            --data-class S2 \
+            --model glm-5.3:cloud \
+            --output-dir /tmp/codebase-analysis-q4
+          test -s /tmp/codebase-analysis-q4/request.json
+          test -s /tmp/codebase-analysis-q4/agenticos-plan.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          req = json.loads(Path('/tmp/codebase-analysis-q4/request.json').read_text())
+          plan = json.loads(Path('/tmp/codebase-analysis-q4/agenticos-plan.json').read_text())
+          assert req['skill']['id'] == 'codebase-analysis'
+          assert req['skill']['version'] == '0.1.1'
+          assert len(req['skill']['package_sha256']) == 64
+          assert plan['authorization'] == 'not_granted'
+          assert len(plan['jobs']) == 3
+          print('Qualification package_sha256=' + req['skill']['package_sha256'])
+          PY
+
       - name: Verify deterministic hashes for all canonical skills
         run: |
           python - <<'PY'
