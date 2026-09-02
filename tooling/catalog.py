@@ -14,6 +14,7 @@ except ImportError as exc:
 ROOT = Path(__file__).resolve().parent.parent
 SKILLS_ROOT = ROOT / "skills"
 CATALOG_ROOT = ROOT / "catalog"
+EVALUATION_REPORT = ROOT / "reports" / "evaluation.json"
 
 
 def load_manifest(path: Path):
@@ -31,15 +32,24 @@ def canonical_id(manifest, manifest_path: Path):
     return str(skill_id)
 
 
-def generate_catalog():
-    CATALOG_ROOT.mkdir(exist_ok=True)
+def load_evaluation_results(path: Path = EVALUATION_REPORT):
+    if not path.exists():
+        return {}
+    with path.open("r", encoding="utf-8") as handle:
+        data = json.load(handle)
+    if not isinstance(data, dict):
+        raise ValueError(f"{path} must contain a JSON object")
+    return data
 
+
+def build_catalog(skills_root: Path = SKILLS_ROOT, evaluation_results=None):
+    evaluation_results = evaluation_results or {}
     index = {}
     capabilities_map = {}
     dependencies = {}
     compatibility = {}
 
-    manifest_paths = sorted(SKILLS_ROOT.rglob("skill.yaml")) if SKILLS_ROOT.exists() else []
+    manifest_paths = sorted(skills_root.rglob("skill.yaml")) if skills_root.exists() else []
     for manifest_path in manifest_paths:
         manifest = load_manifest(manifest_path)
         skill_id = canonical_id(manifest, manifest_path)
@@ -48,23 +58,37 @@ def generate_catalog():
 
         risk = manifest.get("risk") or {}
         evaluation = manifest.get("evaluation") or {}
+        measured = evaluation_results.get(skill_id) or {}
         relationships = manifest.get("relationships") or {}
         legacy_dependencies = manifest.get("dependencies") or {}
         capabilities = list(manifest.get("capabilities") or [])
-        rel_path = manifest_path.parent.relative_to(ROOT).as_posix()
+        requirements = manifest.get("requirements") or {}
+        rel_path = manifest_path.parent.relative_to(ROOT).as_posix() if manifest_path.is_relative_to(ROOT) else manifest_path.parent.relative_to(skills_root).as_posix()
 
-        quality_score = evaluation.get("quality_score")
-        if quality_score is None:
-            quality_score = evaluation.get("minimum_score", 0.0)
+        measured_score = measured.get("score")
+        if measured_score is not None:
+            measured_score = float(measured_score)
 
         index[skill_id] = {
+            "aliases": list(manifest.get("aliases") or []),
             "version": manifest.get("version", "0.0.0"),
             "schema_version": manifest.get("schema_version"),
             "status": manifest.get("status", "draft"),
-            "quality_score": quality_score or 0.0,
+            "quality_score": measured_score,
+            "evaluation": {
+                "minimum_score": evaluation.get("minimum_score"),
+                "golden_tasks": evaluation.get("golden_tasks"),
+                "passed": measured.get("passed") if measured else None,
+            },
             "risk_level": risk.get("level", 0),
             "side_effects": manifest.get("side_effects", "unknown"),
             "capabilities": capabilities,
+            "requirements": {
+                "tool_capabilities": list(requirements.get("tool_capabilities") or []),
+                "skills": list(requirements.get("skills") or []),
+            },
+            "data_classes": manifest.get("data_classes", {}),
+            "compatibility": manifest.get("compatibility", {}),
             "path": rel_path,
         }
 
@@ -85,17 +109,25 @@ def generate_catalog():
     for capability in capabilities_map:
         capabilities_map[capability].sort()
 
-    outputs = {
+    return {
         "index.json": index,
         "capabilities.json": capabilities_map,
         "dependencies.json": dependencies,
         "compatibility.json": compatibility,
     }
+
+
+def generate_catalog():
+    CATALOG_ROOT.mkdir(exist_ok=True)
+    outputs = build_catalog(evaluation_results=load_evaluation_results())
+
     for filename, payload in outputs.items():
         with (CATALOG_ROOT / filename).open("w", encoding="utf-8") as handle:
             json.dump(payload, handle, indent=2, ensure_ascii=False, sort_keys=True)
             handle.write("\n")
 
+    index = outputs["index.json"]
+    capabilities_map = outputs["capabilities.json"]
     print(f"Catalog generated: {len(index)} skills, {len(capabilities_map)} capabilities")
 
 
