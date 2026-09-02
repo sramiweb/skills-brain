@@ -56,6 +56,29 @@ def write_report(path: Path, scores: dict[str, float]):
     path.write_text(json.dumps({skill_id: {"score": score} for skill_id, score in scores.items()}), encoding="utf-8")
 
 
+def discovery_output(data_class="S2"):
+    return {
+        "outputs": [{
+            "id": "discovery-result",
+            "schema_id": "product.discovery-result.v1",
+            "data_class": data_class,
+        }]
+    }
+
+
+def specification_input(allowed=None):
+    return {
+        "inputs": [{
+            "id": "discovery-result",
+            "schema_id": "product.discovery-result.v1",
+            "source": "skill",
+            "required": True,
+            "from_capabilities": ["product.discover"],
+            "allowed_data_classes": allowed or ["S1", "S2"],
+        }]
+    }
+
+
 def test_composes_smallest_eligible_set_and_never_grants_authorization(tmp_path):
     skills = tmp_path / "skills"
     write_manifest(skills, "discovery", "product.discover")
@@ -69,6 +92,7 @@ def test_composes_smallest_eligible_set_and_never_grants_authorization(tmp_path)
     assert result["status"] == "composed"
     assert result["authorization"] == "not_granted"
     assert [item["id"] for item in result["selected_skills"]] == ["discovery", "specification"]
+    assert result["handoffs"] == []
     assert result["missing_capabilities"] == []
     assert result["blocking_reasons"] == []
 
@@ -190,3 +214,51 @@ def test_missing_eligible_capability_is_reported_without_adjacent_substitution(t
     assert result["status"] == "unresolved"
     assert result["missing_capabilities"] == ["product.feature.specify"]
     assert result["selected_skills"] == []
+
+
+def test_typed_handoff_creates_data_edge_and_orders_producer_first(tmp_path):
+    skills = tmp_path / "skills"
+    write_manifest(skills, "discovery", "product.discover", contracts=discovery_output("S2"))
+    write_manifest(skills, "specification", "product.feature.specify", contracts=specification_input(["S1", "S2"]))
+    report = tmp_path / "evaluation.json"
+    write_report(report, {"discovery": 0.8, "specification": 0.8})
+
+    result = composer.compose(base_request(report), skills_root=skills)
+
+    assert result["status"] == "composed"
+    assert result["execution_order"].index("discovery") < result["execution_order"].index("specification")
+    assert result["handoffs"] == [{
+        "producer_skill": "discovery",
+        "output": "discovery-result",
+        "consumer_skill": "specification",
+        "input": "discovery-result",
+        "schema_id": "product.discovery-result.v1",
+        "data_class": "S2",
+    }]
+
+
+def test_required_typed_handoff_blocks_when_schema_provider_is_missing(tmp_path):
+    skills = tmp_path / "skills"
+    write_manifest(skills, "discovery", "product.discover")
+    write_manifest(skills, "specification", "product.feature.specify", contracts=specification_input(["S2"]))
+    report = tmp_path / "evaluation.json"
+    write_report(report, {"discovery": 0.8, "specification": 0.8})
+
+    result = composer.compose(base_request(report), skills_root=skills)
+
+    assert result["status"] == "unresolved"
+    assert result["selected_skills"] == []
+    assert "handoff_unresolved:specification:discovery-result:product.discovery-result.v1" in result["blocking_reasons"]
+
+
+def test_typed_handoff_blocks_data_class_widening(tmp_path):
+    skills = tmp_path / "skills"
+    write_manifest(skills, "discovery", "product.discover", contracts=discovery_output("S3"))
+    write_manifest(skills, "specification", "product.feature.specify", contracts=specification_input(["S0", "S1", "S2"]))
+    report = tmp_path / "evaluation.json"
+    write_report(report, {"discovery": 0.8, "specification": 0.8})
+
+    result = composer.compose(base_request(report), skills_root=skills)
+
+    assert result["status"] == "unresolved"
+    assert "handoff_data_class_denied:specification:discovery-result:S3" in result["blocking_reasons"]
