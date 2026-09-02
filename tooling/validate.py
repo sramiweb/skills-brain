@@ -40,6 +40,19 @@ def load_schema(version: str):
         return json.load(handle)
 
 
+def load_capability_ontology():
+    path = ROOT / "standards" / "capabilities.yaml"
+    if not path.exists():
+        return {"capabilities": {}, "tool_capabilities": {}}
+    with path.open("r", encoding="utf-8") as handle:
+        data = yaml.safe_load(handle)
+    schema_path = ROOT / "schemas" / "capability.schema.json"
+    with schema_path.open("r", encoding="utf-8") as handle:
+        schema = json.load(handle)
+    jsonschema.validate(data, schema)
+    return data
+
+
 def validate_yaml(skill_yaml_path: Path):
     try:
         skill_data = load_manifest(skill_yaml_path)
@@ -73,6 +86,31 @@ def validate_frontmatter(skill_md_path: Path):
     return True, "Valid"
 
 
+def validate_capabilities(manifest):
+    if str(manifest.get("schema_version")) != "2.1":
+        return []
+    ontology = load_capability_ontology()
+    issues = []
+    known_skills = ontology.get("capabilities", {})
+    known_tools = ontology.get("tool_capabilities", {})
+
+    for capability in manifest.get("capabilities", []):
+        entry = known_skills.get(capability)
+        if entry is None:
+            issues.append(f"Unknown capability '{capability}'")
+        elif entry.get("status") == "deprecated":
+            issues.append(f"Deprecated capability '{capability}' must not be introduced")
+
+    for capability in manifest.get("requirements", {}).get("tool_capabilities", []):
+        entry = known_tools.get(capability)
+        if entry is None:
+            issues.append(f"Unknown tool capability '{capability}'")
+        elif entry.get("status") == "deprecated":
+            issues.append(f"Deprecated tool capability '{capability}' must not be introduced")
+
+    return issues
+
+
 def validate_skill(skill_path):
     skill_path = Path(skill_path)
     errors = []
@@ -98,6 +136,11 @@ def validate_skill(skill_path):
             valid, message = False, f"Invalid UTF-8: {exc}"
         if not valid:
             errors.append(f"skill.yaml: {message}")
+        else:
+            try:
+                errors.extend(validate_capabilities(load_manifest(skill_yaml)))
+            except Exception as exc:
+                errors.append(f"Capability ontology validation failed: {exc}")
 
     return errors
 
@@ -111,6 +154,7 @@ def iter_skill_dirs():
 def validate_all():
     all_errors = {}
     seen_ids = {}
+    seen_aliases = {}
 
     for skill_dir in iter_skill_dirs():
         errors = validate_skill(skill_dir)
@@ -123,16 +167,27 @@ def validate_all():
                     errors.append(f"Duplicate skill id '{skill_id}' also used by {seen_ids[skill_id]}")
                 else:
                     seen_ids[skill_id] = str(skill_dir)
+            for alias in manifest.get("aliases", []):
+                if alias == skill_id:
+                    errors.append(f"Alias '{alias}' duplicates canonical id")
+                if alias in seen_aliases:
+                    errors.append(f"Duplicate alias '{alias}' also used by {seen_aliases[alias]}")
+                else:
+                    seen_aliases[alias] = str(skill_dir)
         except Exception as exc:
             errors.append(f"Unable to inspect manifest identity: {exc}")
         if errors:
             all_errors[str(skill_dir)] = errors
 
+    collisions = set(seen_ids).intersection(seen_aliases)
+    for value in sorted(collisions):
+        owner = seen_aliases[value]
+        all_errors.setdefault(owner, []).append(f"Alias '{value}' collides with a canonical skill id")
+
     return all_errors
 
 
 def validate_all_skills():
-    """Stable API used by tooling/cli.py."""
     return validate_all()
 
 
