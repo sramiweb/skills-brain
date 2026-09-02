@@ -18,6 +18,7 @@ except ImportError as exc:
     raise SystemExit("Missing dependency PyYAML. Install requirements-dev.txt") from exc
 
 GENERATED_RESULT_SUFFIX = "-results.json"
+GENERATED_EVIDENCE_FILES = {"regression-baseline.json"}
 EXCLUDED_DIR_NAMES = {".git", "__pycache__", ".pytest_cache", ".mypy_cache", ".ruff_cache"}
 EXCLUDED_FILE_NAMES = {".DS_Store"}
 EXCLUDED_SUFFIXES = {".pyc", ".pyo"}
@@ -55,6 +56,8 @@ def is_excluded(skill_dir: Path, path: Path) -> bool:
     # Evaluation evidence is runtime-generated and intentionally does not change
     # the immutable source package identity.
     if path.name.endswith(GENERATED_RESULT_SUFFIX):
+        return True
+    if path.name in GENERATED_EVIDENCE_FILES:
         return True
     return False
 
