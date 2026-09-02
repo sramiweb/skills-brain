@@ -1,0 +1,44 @@
+schema_version: "2.1"
+id: subscription-analysis
+name: Subscription Analysis
+version: 0.1.0
+status: candidate
+description: Analyze subscription states, movements, plan mix and recurring revenue economics from explicit billing evidence.
+category: revenue
+capabilities:
+  - revenue.subscription.analyze
+inputs:
+  - subscription records
+  - plan definitions
+  - billing period
+outputs:
+  - subscription movement analysis
+  - plan mix analysis
+  - anomalies and data gaps
+risk:
+  level: 1
+  description: Read-oriented financial analysis based on supplied billing evidence.
+side_effects: none
+security:
+  network:
+    outbound: false
+  filesystem:
+    read: false
+    write: false
+  shell: false
+  destructive_operations: false
+data_classes:
+  allowed:
+    - S1
+    - S2
+evaluation:
+  golden_tasks: required
+  minimum_score: 0.90
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT
+  created_at: "2026-09-02T08:00:00Z"

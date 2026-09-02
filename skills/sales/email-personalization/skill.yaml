@@ -1,0 +1,44 @@
+schema_version: "2.1"
+id: email-personalization
+name: Email Personalization
+version: 0.1.0
+status: candidate
+description: Personalize B2B outbound email from verified prospect evidence while preserving approved positioning and avoiding fabricated familiarity.
+category: sales
+capabilities:
+  - sales.email.personalize
+inputs:
+  - approved base message
+  - prospect evidence
+  - messaging constraints
+outputs:
+  - personalized email draft
+  - personalization evidence map
+  - unsupported claims removed
+risk:
+  level: 1
+  description: Draft-only Skill; sending remains an external runtime action.
+side_effects: none
+data_classes:
+  allowed:
+    - S1
+    - S2
+security:
+  network:
+    outbound: false
+  filesystem:
+    read: false
+    write: false
+  shell: false
+  destructive_operations: false
+evaluation:
+  golden_tasks: required
+  minimum_score: 0.90
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT
+  created_at: "2026-09-02T08:00:00Z"

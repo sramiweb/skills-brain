@@ -1,0 +1,39 @@
+schema_version: "2.1"
+id: linkedin-post-writing
+name: LinkedIn Post Writing
+version: 0.1.0
+status: candidate
+description: Draft LinkedIn posts from verified source material and brand constraints without fabricating results, customers or authority.
+category: content
+capabilities:
+  - content.linkedin.write
+inputs:
+  - source evidence
+  - audience
+  - brand and messaging constraints
+outputs:
+  - LinkedIn post draft
+  - claim evidence map
+risk:
+  level: 1
+  description: Draft-only content generation; publication remains a separate runtime action.
+side_effects: none
+security:
+  network:
+    outbound: false
+  filesystem:
+    read: false
+    write: false
+  shell: false
+  destructive_operations: false
+evaluation:
+  golden_tasks: required
+  minimum_score: 0.88
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT
+  created_at: "2026-09-02T08:00:00Z"

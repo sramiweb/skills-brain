@@ -1,0 +1,47 @@
+schema_version: "2.1"
+id: postgres-diagnosis
+name: PostgreSQL Diagnosis
+version: 0.1.0
+status: candidate
+description: Diagnose PostgreSQL health and performance from database metrics, query evidence, locks and system symptoms using an evidence-first workflow.
+category: databases
+capabilities:
+  - database.postgres.diagnose
+inputs:
+  - PostgreSQL metrics
+  - query and lock evidence
+  - observed symptoms
+outputs:
+  - diagnosis
+  - ranked hypotheses
+  - missing evidence and safe next checks
+requirements:
+  tool_capabilities:
+    - monitoring.read
+risk:
+  level: 2
+  description: Read-oriented database diagnosis; remediation is outside the Skill authority.
+side_effects: none
+security:
+  network:
+    outbound: false
+  filesystem:
+    read: false
+    write: false
+  shell: false
+  destructive_operations: false
+data_classes:
+  allowed:
+    - S1
+    - S2
+evaluation:
+  golden_tasks: required
+  minimum_score: 0.92
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT
+  created_at: "2026-09-02T08:00:00Z"

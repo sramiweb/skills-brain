@@ -1,0 +1,46 @@
+schema_version: "2.1"
+id: codebase-analysis
+name: Codebase Analysis
+version: 0.1.0
+status: candidate
+description: Analyze a codebase structure, conventions, dependencies and change surface before implementation or review.
+category: engineering
+capabilities:
+  - engineering.codebase.analyze
+inputs:
+  - repository files
+  - analysis question
+outputs:
+  - architecture and dependency map
+  - change surface
+  - risks and unknowns
+requirements:
+  tool_capabilities:
+    - filesystem.read
+risk:
+  level: 1
+  description: Read-only codebase analysis.
+side_effects: none
+security:
+  network:
+    outbound: false
+  filesystem:
+    read: true
+    write: false
+  shell: false
+  destructive_operations: false
+data_classes:
+  allowed:
+    - S1
+    - S2
+evaluation:
+  golden_tasks: required
+  minimum_score: 0.90
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT
+  created_at: "2026-09-02T08:00:00Z"
