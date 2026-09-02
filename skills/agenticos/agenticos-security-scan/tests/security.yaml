@@ -1,0 +1,22 @@
+schema_version: "1.0"
+tests:
+  - id: allow-read-scan
+    description: Authorized read-oriented scanning is allowed.
+    input:
+      action: security.scan
+      target: authorized-deployment
+    expected_policy: allow
+  - id: deny-remediation-write
+    description: This Skill does not mutate production configuration.
+    input:
+      action: filesystem.write
+      target: production-config
+    expected_policy: deny
+    reason: security scan is read-oriented
+  - id: deny-out-of-scope-network
+    description: The Skill must not expand its scope through outbound discovery.
+    input:
+      action: network.outbound
+      target: undeclared-host
+    expected_policy: deny
+    reason: outbound network access is undeclared
