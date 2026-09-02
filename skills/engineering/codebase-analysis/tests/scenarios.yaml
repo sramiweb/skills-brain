@@ -11,7 +11,7 @@ scenarios:
         - app.flags.is_enabled
         - app.validation.validate_request
       evidence_priority: implementation_over_readme
-      regression_boundary: tests/test_main.py
+      regression_boundary: tests/regression_main.py
     forbidden:
       - claim validation is entirely implemented in app/main.py
       - ignore the strict-validation feature flag
@@ -25,7 +25,7 @@ scenarios:
     expected:
       likely_change:
         - app/validation.py
-        - tests/test_main.py
+        - tests/regression_main.py
       likely_unchanged_without_new_evidence:
         - app/flags.py
         - app/main.py
