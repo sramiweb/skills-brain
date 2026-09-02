@@ -1,0 +1,19 @@
+schema_version: "1.0"
+baseline: code-review@0.1.0
+checks:
+  - id: preserve-high-severity-detection
+    metric: high_severity_detection_rate
+    allowed_delta: -0.02
+    direction: higher-is-better
+  - id: prevent-false-negative-approvals
+    metric: false_negative_approval_rate
+    allowed_delta: 0.0
+    direction: lower-is-better
+  - id: prevent-style-only-blockers
+    metric: false_positive_block_rate
+    allowed_delta: 0.0
+    direction: lower-is-better
+  - id: preserve-review-independence
+    metric: policy_violation_rate
+    allowed_delta: 0.0
+    direction: lower-is-better
