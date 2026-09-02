@@ -10,8 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def load_module(name: str, path: Path):
     spec = importlib.util.spec_from_file_location(name, path)
-    module = importlib.util.module_from_spec(spec)
     assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
 
@@ -68,6 +68,16 @@ def test_package_hash_changes_when_skill_content_changes(tmp_path):
     write_skill(skill)
     before = integrity.calculate(skill)["package_sha256"]
     (skill / "SKILL.md").write_text("---\nname: demo\n---\n# Changed\n", encoding="utf-8")
+    after = integrity.calculate(skill)["package_sha256"]
+    assert before != after
+
+
+def test_new_resource_directory_is_automatically_covered(tmp_path):
+    skill = tmp_path / "skill"
+    write_skill(skill)
+    before = integrity.calculate(skill)["package_sha256"]
+    (skill / "resources").mkdir()
+    (skill / "resources" / "policy.txt").write_text("governed", encoding="utf-8")
     after = integrity.calculate(skill)["package_sha256"]
     assert before != after
 
