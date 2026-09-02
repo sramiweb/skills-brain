@@ -28,7 +28,8 @@ Tool  = WITH WHAT to act
 - AgenticOS-specific tenants, connectors, credentials and tool permissions do not belong in canonical Skills.
 - Evidence is required before trust.
 - Security, compatibility and integrity checks are fail-closed.
-- Eligibility is checked before ranking.
+- Eligibility is checked before ranking or composition.
+- Composition plans requirements; it never grants runtime permissions.
 - Runtime outcomes may produce improvement proposals, never uncontrolled production self-modification.
 - A small set of evaluated Skills is more valuable than a large unmeasured catalog.
 
@@ -36,14 +37,14 @@ Tool  = WITH WHAT to act
 
 ```text
 skills-brain/
-├── standards/          # Normative lifecycle, capabilities, evaluation, resolution, integrity, deliberation, learning
+├── standards/          # Normative lifecycle, capabilities, evaluation, resolution, composition, integrity, deliberation, learning
 ├── schemas/            # Machine contracts
 ├── core/               # Governance meta-skills
 ├── skills/             # Canonical skill packages
 ├── protocols/          # Debate and decision protocols
 ├── catalog/            # Generated indexes
 ├── adapters/           # Runtime/platform export contracts
-├── tooling/            # Validation, evaluation, catalog, resolver and integrity tooling
+├── tooling/            # Validation, evaluation, catalog, resolver, composer and integrity tooling
 ├── examples/           # Example requests/contracts
 ├── tests/              # Repository/tooling tests
 └── .github/workflows/  # CI
@@ -117,6 +118,44 @@ python tooling/resolver.py examples/resolution-request.json
 The v1 ranking uses capability coverage, measured Q0-Q5 quality, lifecycle maturity and risk fitness. Missing evaluation evidence contributes zero. `minimum_score` is a threshold and is never treated as achieved quality.
 
 See `standards/resolution.md` and `schemas/resolution-request.schema.json`.
+
+## Governed Skill composer
+
+`tooling/composer.py` builds a deterministic minimum sufficient plan when multiple capabilities are requested.
+
+```text
+requested capabilities
+-> resolver-grade eligibility
+-> minimum sufficient Skill set
+-> transitive dependency closure
+-> dependency eligibility
+-> conflicts / supersession
+-> topological order
+-> combined logical requirements
+-> composite risk / side effects
+-> authorization: not_granted
+```
+
+Important properties:
+
+- every selected Skill and transitive dependency must remain eligible;
+- one full-match Skill is preferred over an unnecessary bundle;
+- missing capabilities are never replaced by semantically adjacent capabilities;
+- `requirements.skills` and `relationships.requires` are closed recursively;
+- missing, cyclic or ineligible dependencies block composition;
+- explicit conflicts and replacement/superseded pairs block composition;
+- `max_skills` applies to the complete closure, not just the initial candidates;
+- the union of `tool_capabilities` is planning information only, never granted permissions;
+- quality is used only after eligibility and cannot bypass a rejection;
+- every result keeps `authorization: "not_granted"`.
+
+Example:
+
+```bash
+python tooling/composer.py examples/composition-request.json
+```
+
+See `standards/composition.md`, `schemas/composition-request.schema.json` and `schemas/composition-result.schema.json`.
 
 ## Skill lifecycle
 
@@ -253,7 +292,7 @@ Currently present:
 - `skill-deliberator`
 - `skill-retrospective`
 
-The resolver selects eligible candidates; the composer may build a minimum sufficient multi-Skill plan from eligible candidates but always returns runtime authorization as `not_granted`.
+`skill-resolver` describes the eligibility-first method implemented by `tooling/resolver.py`. `skill-composer` describes the governed multi-Skill method implemented by `tooling/composer.py`. Both are advisory and always leave runtime authorization ungranted.
 
 ## Klerbot Golden Tenant
 
@@ -276,6 +315,7 @@ pytest -q
 python tooling/evaluator.py
 python tooling/catalog.py
 python tooling/resolver.py examples/resolution-request.json
+python tooling/composer.py examples/composition-request.json
 python tooling/eval_harness.py --help
 ```
 
@@ -287,10 +327,10 @@ python tooling/eval_harness.py --help
 | P1 | Strict v2.1 schema + CI + capability ontology | Done |
 | P2 | Evidence-based Q0-Q5 + evaluation harness | Harness implemented; external runtime qualification in progress |
 | P3 | Supply-chain integrity + AgenticOS adapter | Done |
-| P4 | Catalog + capability resolver/composer | Resolver v1 + composer guidance implemented; runtime multi-Skill execution pending |
+| P4 | Catalog + capability resolver/composer | Resolver v1 + deterministic composer v1 implemented; runtime multi-Skill execution pending |
 | P5 | Outcome-driven learning | Foundation done |
 | P6 | Deliberation protocols | Foundation done |
-| P7 | Reputation, additional adapters and advanced composition | Planned |
+| P7 | Reputation, typed handoffs, additional adapters and advanced composition | Planned |
 
 See `SPECIFICATION.md` for the normative architecture and rules.
 
