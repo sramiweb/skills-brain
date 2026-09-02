@@ -1,42 +1,57 @@
-# Skills Brain v2 - Skill Manifest
-schema_version: "2.0"
-id: "agenticos/agenticos-security-scan"
-name: "Agenticos Security Scan"
-version: "1.0.0"
-status: "active"
-description: "Security scanning for AgenticOS deployments"
-category: "agenticos"
+schema_version: "2.1"
+id: agenticos-security-scan
+aliases:
+  - agenticos/agenticos-security-scan
+name: AgenticOS Security Scan
+version: 1.0.0
+status: candidate
+description: Perform evidence-based security scanning for AgenticOS deployments without mutating production state.
+category: agenticos
 capabilities:
-  - "agenticos.security-scan"
-  - "security.scanning"
-  - "verification.security"
+  - agenticos.security.scan
+  - security.scan
+  - verification.security
+inputs:
+  - deployment artifacts
+  - configuration evidence
+outputs:
+  - security findings
+  - remediation recommendations
+requirements:
+  tool_capabilities:
+    - filesystem.read
+    - shell.execute
+    - security.scan
 risk:
   level: 2
-  description: "Read-only security analysis"
-side_effects:
-  - "Generates security reports"
-  - "May flag false positives"
+  description: Read-oriented security analysis that may execute scanning commands.
+side_effects: local
 security:
-  data_class: "internal"
-  permissions:
-    - "read:files"
-    - "execute:commands"
-    - "scan:security"
-provenance:
-  author: "sramiweb"
-  created: "2026-09-01"
-  source: "migration-p0"
+  network:
+    outbound: false
+  filesystem:
+    read: true
+    write: false
+  shell: true
+  destructive_operations: false
 relationships:
-  requires: []
   optional:
-    - "agenticos/agenticos-deploy"
-  conflicts: []
-  extends: []
-  supersedes: []
-  composes: []
+    - agenticos-deploy
   related:
-    - "templates/template-security-audit"
+    - template-security-audit
 evaluation:
-  quality_score: 0.0
-  tests_passed: 0
-  tests_total: 0
+  golden_tasks: required
+  minimum_score: 0.90
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  derived_from:
+    - legacy-v2.0-manifest
+  license: MIT
+  created_at: "2026-09-01T00:00:00Z"
+  last_review: "2026-09-02T07:00:00Z"
+compatibility:
+  agenticos: ">=3.1"
