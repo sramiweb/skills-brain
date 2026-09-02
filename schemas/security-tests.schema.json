@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Skills Brain Security Test Definitions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "tests"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "tests": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "description", "input", "expected_policy"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "description": {"type": "string", "minLength": 1},
+          "input": {},
+          "expected_policy": {"type": "string", "enum": ["allow", "deny", "approval"]},
+          "reason": {"type": "string"}
+        }
+      }
+    }
+  }
+}
