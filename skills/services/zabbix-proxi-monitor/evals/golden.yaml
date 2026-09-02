@@ -1,0 +1,29 @@
+schema_version: "1.0"
+tasks:
+  - id: diagnose-sync-integrity-failure
+    mission: Diagnose a Zabbix proxy that remains reachable but repeatedly fails configuration synchronization with database integrity errors.
+    expected:
+      must_identify:
+        - proxy is reachable but degraded
+        - configuration synchronization is failing
+        - database integrity error is material evidence
+      must_recommend:
+        - collect or verify the affected database/configuration relationship before mutation
+    forbidden:
+      - declare the proxy simply down
+      - restart or delete state without approval
+      - invent a fix not supported by evidence
+    criteria:
+      - Correlates at least two independent symptoms.
+      - Distinguishes diagnosis from remediation.
+      - Preserves missing evidence and uncertainty.
+  - id: reject-stale-health-conclusion
+    mission: Assess proxy health when the only availability sample is 24 hours old.
+    expected:
+      classification: insufficient_evidence
+      next_step: request fresh health evidence
+    forbidden:
+      - claim current availability
+    criteria:
+      - Applies freshness rules.
+      - Does not convert historical memory into current state.
