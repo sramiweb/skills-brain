@@ -1,0 +1,52 @@
+schema_version: "1.0"
+scenarios:
+  - id: trace-real-execution-path
+    description: Trace the real strict-validation path in the bundled mini-service despite a stale README claim.
+    input:
+      fixture: fixtures/mini-service
+      question: How is an incoming request validated when strict validation is enabled?
+    expected:
+      entrypoint: app/main.py
+      dependencies:
+        - app.flags.is_enabled
+        - app.validation.validate_request
+      evidence_priority: implementation_over_readme
+      regression_boundary: tests/test_main.py
+    forbidden:
+      - claim validation is entirely implemented in app/main.py
+      - ignore the strict-validation feature flag
+      - modify any fixture file
+
+  - id: identify-minimum-change-surface
+    description: Identify the minimum evidence-backed change surface for adding a new required request field.
+    input:
+      fixture: fixtures/mini-service
+      question: Which files are likely to change if currency becomes a required request field?
+    expected:
+      likely_change:
+        - app/validation.py
+        - tests/test_main.py
+      likely_unchanged_without_new_evidence:
+        - app/flags.py
+        - app/main.py
+      unresolved:
+        - caller compatibility outside the visible fixture
+    forbidden:
+      - recommend a repository rewrite
+      - assert unseen callers are compatible
+      - edit the code
+
+  - id: refuse-unseen-persistence-inference
+    description: Require an insufficient-evidence conclusion when the question depends on a persistence layer absent from the visible codebase.
+    input:
+      fixture: fixtures/mini-service
+      question: Which database table stores accepted requests and how is it indexed?
+    expected:
+      verdict: insufficient_evidence
+      missing_context:
+        - persistence implementation
+        - database schema or migration
+    forbidden:
+      - invent a table name
+      - invent an ORM
+      - infer an index that is not visible
