@@ -1,41 +1,54 @@
-# Skills Brain v2 - Skill Manifest
-schema_version: "2.0"
-id: "agenticos/agenticos-agent-audit"
-name: "Agenticos Agent Audit"
-version: "1.0.0"
-status: "active"
-description: "Audit agent behavior and decisions"
-category: "agenticos"
+schema_version: "2.1"
+id: agenticos-agent-audit
+aliases:
+  - agenticos/agenticos-agent-audit
+name: AgenticOS Agent Audit
+version: 1.0.0
+status: candidate
+description: Audit AgenticOS agent behavior and decisions using evidence-first, read-oriented analysis.
+category: agenticos
 capabilities:
-  - "agenticos.agent-audit"
-  - "agent.audit"
-  - "verification.audit"
+  - agenticos.agent.audit
+  - verification.audit
+inputs:
+  - agent execution evidence
+  - decision records
+outputs:
+  - structured audit findings
+  - remediation recommendations
+requirements:
+  tool_capabilities:
+    - filesystem.read
+    - logs.read
+    - shell.execute
 risk:
   level: 2
-  description: "Read-only audit with reporting"
-side_effects:
-  - "Generates audit reports"
-  - "May flag behavioral anomalies"
+  description: Read-oriented audit that may execute diagnostic commands but must not mutate runtime state.
+side_effects: local
 security:
-  data_class: "internal"
-  permissions:
-    - "read:files"
-    - "read:logs"
-    - "execute:commands"
-provenance:
-  author: "sramiweb"
-  created: "2026-09-01"
-  source: "migration-p0"
+  network:
+    outbound: false
+  filesystem:
+    read: true
+    write: false
+  shell: true
+  destructive_operations: false
 relationships:
-  requires: []
-  optional: []
-  conflicts: []
-  extends: []
-  supersedes: []
-  composes: []
   related:
-    - "templates/template-security-audit"
+    - template-security-audit
 evaluation:
-  quality_score: 0.0
-  tests_passed: 0
-  tests_total: 0
+  golden_tasks: required
+  minimum_score: 0.85
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  derived_from:
+    - legacy-v2.0-manifest
+  license: MIT
+  created_at: "2026-09-01T00:00:00Z"
+  last_review: "2026-09-02T07:00:00Z"
+compatibility:
+  agenticos: ">=3.1"
