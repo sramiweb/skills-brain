@@ -27,7 +27,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          roots = [Path('skills'), Path('standards'), Path('schemas'), Path('protocols'), Path('tooling'), Path('core'), Path('tests')]
+          roots = [Path('skills'), Path('standards'), Path('schemas'), Path('protocols'), Path('tooling'), Path('core'), Path('tests'), Path('adapters')]
           suffixes = {'.md', '.yaml', '.yml', '.json', '.py', '.txt'}
           failures = []
           for root in roots:
@@ -47,11 +47,24 @@ jobs:
       - name: Validate canonical skills and capability ontology
         run: python tooling/validate.py --all
 
-      - name: Validate tooling syntax
-        run: python -m compileall -q tooling
+      - name: Validate tooling and adapter syntax
+        run: python -m compileall -q tooling adapters
 
       - name: Run tests
         run: pytest -q
+
+      - name: Verify deterministic hashes for all canonical skills
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from tooling.integrity import calculate
+          count = 0
+          for manifest in sorted(Path('skills').rglob('skill.yaml')):
+              hashes = calculate(manifest.parent)
+              assert all(len(value) == 64 for value in hashes.values())
+              count += 1
+          print(f'Integrity hashing passed for {count} canonical skills')
+          PY
 
       - name: Evaluate Q0-Q5 evidence
         run: python tooling/evaluator.py
