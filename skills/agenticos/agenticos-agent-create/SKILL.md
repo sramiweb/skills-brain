@@ -1,60 +1,47 @@
 ---
-name: "Agenticos Agent Create"
-version: "1.0.0"
-status: "active"
+name: agenticos-agent-create
+description: Design a new AgenticOS agent definition from purpose, capabilities and governance constraints.
+license: MIT
+compatibility: skills-brain-v2.1, agenticos-v3.1
+metadata:
+  author: sramiweb
+  version: "1.0.0"
+  category: agenticos
 ---
 
-# Agenticos Agent Create
-
-Create and configure new AgenticOS agents with proper permissions.
+# AgenticOS Agent Create
 
 ## Purpose
 
-This skill creates new AgenticOS agents with appropriate configurations, permissions, and registrations with the orchestrator.
+Design a governed AgenticOS agent configuration. This Skill may produce configuration artifacts or proposals, but it does not grant itself permissions and does not activate an agent outside AgenticOS policy.
 
 ## Workflow
 
-1. **Validation**: Validate agent configuration and permissions
-2. **Creation**: Create agent instance with specified configuration
-3. **Registration**: Register agent with orchestrator
-4. **Verification**: Confirm agent is operational
+1. Define purpose, domain, inputs, outputs and success metrics.
+2. Identify required capabilities before selecting concrete tools.
+3. Select primary/supporting Skills from the governed registry.
+4. Propose data class, runtime, quotas, triggers and memory mode.
+5. Derive the minimum required connector/tool capabilities.
+6. Define forbidden actions, approval policy and debate/learning policy.
+7. Run independent audit/review before activation.
 
 ## Inputs
 
-- `agent_name`: Name for the new agent
-- `agent_type`: Type of agent (worker, supervisor, specialist)
-- `permissions`: List of permissions to grant
-- `config`: Agent configuration object
+- Agent purpose and domain.
+- Required capabilities.
+- Tenant/runtime constraints supplied by AgenticOS.
+- Risk and data classification constraints.
 
 ## Outputs
 
-- `agent_id`: Created agent identifier
-- `status`: Creation status (success/failure)
-- `config_applied`: Applied configuration
+- Agent definition proposal.
+- Required Skill/capability list.
+- Governance checklist.
+- Validation findings.
 
-## Examples
+## Guardrails
 
-```yaml
-skill: agenticos/agent-create
-inputs:
-  agent_name: "worker-agent-042"
-  agent_type: "worker"
-  permissions:
-    - "read:files"
-    - "write:files"
-  config:
-    max_concurrent: 5
-```
-
-## Quality Gates
-
-- **Q0**: Structure ✓
-- **Q1**: YAML Syntax ✓
-- **Q2**: Schema Compliance ✓
-- **Q3**: Scenarios (TODO)
-- **Q4**: Golden Tasks (TODO)
-- **Q5**: Security Scan ✓
-
-## Changelog
-
-- **1.0.0** (2026-09-01): Initial v2 release
+- Never grant permissions not explicitly authorized by AgenticOS.
+- Never embed credentials or tenant secrets in a canonical Skill.
+- Prefer a Worker/Skill over a new permanent agent when responsibility does not justify a separate owner.
+- Creator must not be the final reviewer for high-impact agents.
