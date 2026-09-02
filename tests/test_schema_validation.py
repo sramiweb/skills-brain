@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 
 import jsonschema
-import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -21,9 +20,31 @@ def test_v20_schema_is_valid_json_schema():
     jsonschema.Draft202012Validator.check_schema(schema)
 
 
-def test_existing_v20_manifest_is_accepted_by_compat_schema():
-    manifest_path = ROOT / "skills" / "agenticos" / "agenticos-agent-audit" / "skill.yaml"
-    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+def test_v20_manifest_is_accepted_by_compat_schema():
+    """Compatibility coverage must use a v2.0 fixture, not a migrated live skill."""
+    manifest = {
+        "schema_version": "2.0",
+        "id": "legacy/example-skill",
+        "name": "Legacy Example Skill",
+        "version": "1.0.0",
+        "status": "active",
+        "description": "Representative legacy v2.0 manifest",
+        "category": "legacy",
+        "capabilities": ["legacy.example"],
+        "risk": {"level": 2},
+        "side_effects": ["Generates a local report"],
+        "security": {
+            "data_class": "internal",
+            "permissions": ["read:files"],
+        },
+        "provenance": {
+            "author": "fixture",
+            "created": "2026-09-01",
+            "source": "compatibility-test",
+        },
+        "relationships": {"requires": [], "optional": []},
+        "evaluation": {"quality_score": 0.0},
+    }
     schema = load_json(ROOT / "schemas" / "skill-v2.0.schema.json")
     jsonschema.validate(instance=manifest, schema=schema)
 
