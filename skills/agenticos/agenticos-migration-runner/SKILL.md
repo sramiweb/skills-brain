@@ -1,57 +1,49 @@
 ---
-name: "Agenticos Migration Runner"
-version: "1.0.0"
-status: "active"
+name: agenticos-migration-runner
+description: Plan and run governed database or service migrations with explicit preflight, rollback and verification requirements.
+license: MIT
+compatibility: skills-brain-v2.1, agenticos-v3.1
+metadata:
+  author: sramiweb
+  version: "1.0.0"
+  category: agenticos
 ---
 
-# Agenticos Migration Runner
-
-Run database and service migrations safely with rollback capability.
+# AgenticOS Migration Runner
 
 ## Purpose
 
-This skill executes database schema migrations and data migrations with built-in safety checks and rollback mechanisms.
+Guide high-risk migrations while preserving separation between planning, authorization and execution. A migration is not considered successful until post-change verification passes.
 
 ## Workflow
 
-1. **Pre-flight checks**: Validate migration scripts and backup state
-2. **Execution**: Run migrations in transactional batches
-3. **Verification**: Confirm migration success and data integrity
-4. **Rollback (if needed)**: Revert migrations on failure
+1. Identify migration objective, exact target version/state and affected components.
+2. Validate migration artifacts before execution.
+3. Verify backup/recovery prerequisites and define a tested rollback strategy.
+4. Assess locks, downtime, data integrity and compatibility risks relevant to the target.
+5. Produce a technical debate/review package for high-risk production migrations.
+6. Obtain AgenticOS/human approval required by policy.
+7. Execute only through authorized mutable tools with idempotency controls where possible.
+8. Verify schema/data/application health after the migration.
+9. Roll back or escalate when acceptance criteria fail.
+10. Record the outcome and trigger retrospective learning.
 
 ## Inputs
 
-- `migration_scripts`: List of migration script paths
-- `target_environment`: Target environment (dev, staging, prod)
-- `rollback_enabled`: Enable automatic rollback on failure (default: true)
+- Migration artifacts or change description.
+- Target environment/context.
+- Backup and rollback evidence.
+- Acceptance criteria.
 
 ## Outputs
 
-- `migration_report`: JSON report with execution details
-- `rollback_script`: Generated rollback script
-- `status`: Success/failure status
+- Migration plan and risk assessment.
+- Execution/verification evidence when authorized.
+- Rollback or escalation result.
 
-## Examples
+## Guardrails
 
-```yaml
-skill: agenticos/migration-runner
-inputs:
-  migration_scripts:
-    - "migrations/001_add_users.sql"
-    - "migrations/002_add_indexes.sql"
-  target_environment: "prod"
-  rollback_enabled: true
-```
-
-## Quality Gates
-
-- **Q0**: Structure ✓
-- **Q1**: YAML Syntax ✓
-- **Q2**: Schema Compliance ✓
-- **Q3**: Scenarios (TODO)
-- **Q4**: Golden Tasks (TODO)
-- **Q5**: Security Scan ✓
-
-## Changelog
-
-- **1.0.0** (2026-09-01): Initial v2 release
+- Never generate a claim that rollback is possible unless the rollback path is actually defined.
+- Production database mutation requires explicit runtime authorization.
+- Never retry a non-idempotent migration blindly.
+- Never mark a migration successful solely because the migration command exited successfully.
