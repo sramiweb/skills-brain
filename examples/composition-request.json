@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "capabilities": [
+    "product.discover",
+    "product.feature.specify"
+  ],
+  "available_tool_capabilities": [],
+  "allowed_status": [
+    "candidate",
+    "approved",
+    "active"
+  ],
+  "max_risk": 2,
+  "max_skills": 4,
+  "include_rejected": true
+}
