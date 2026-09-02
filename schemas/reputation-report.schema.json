@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/sramiweb/skills-brain/main/schemas/reputation-report.schema.json",
+  "title": "Skills Brain Verified Reputation Report v1.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "generated_at", "as_of", "scope", "policy", "subjects"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "as_of": {"type": "string", "format": "date-time"},
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {"type": "string", "enum": ["global", "tenant"]},
+        "tenant_hash": {"type": "string", "minLength": 1}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"type": {"const": "tenant"}}, "required": ["type"]},
+          "then": {"required": ["tenant_hash"]}
+        }
+      ]
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimum_samples", "minimum_verification_score"],
+      "properties": {
+        "minimum_samples": {"type": "integer", "minimum": 1},
+        "minimum_verification_score": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "subjects": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["version", "samples", "eligible_for_ranking", "verified_success_rate", "wilson_lower_bound", "average_verification_score", "human_override_rate", "tool_failure_rate", "average_tool_failures", "freshness_factor", "reputation_score"],
+        "properties": {
+          "version": {"type": "string", "minLength": 1},
+          "samples": {"type": "integer", "minimum": 1},
+          "eligible_for_ranking": {"type": "boolean"},
+          "verified_success_rate": {"type": "number", "minimum": 0, "maximum": 1},
+          "wilson_lower_bound": {"type": "number", "minimum": 0, "maximum": 1},
+          "average_verification_score": {"type": "number", "minimum": 0, "maximum": 1},
+          "human_override_rate": {"type": "number", "minimum": 0, "maximum": 1},
+          "tool_failure_rate": {"type": "number", "minimum": 0, "maximum": 1},
+          "average_tool_failures": {"type": "number", "minimum": 0},
+          "average_duration_ms": {"type": ["number", "null"], "minimum": 0},
+          "average_cost": {"type": ["number", "null"], "minimum": 0},
+          "last_observed_at": {"type": ["string", "null"], "format": "date-time"},
+          "freshness_factor": {"type": "number", "minimum": 0, "maximum": 1},
+          "reputation_score": {"type": ["number", "null"], "minimum": 0, "maximum": 1}
+        }
+      }
+    }
+  }
+}
