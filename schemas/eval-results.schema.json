@@ -1,14 +1,30 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Skills Brain Evaluation Results",
+  "title": "Skills Brain Verified Evaluation Results",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "generated_by", "generated_at", "results"],
+  "required": ["schema_version", "run_id", "gate", "skill_id", "skill_version", "package_sha256", "definition_sha256", "generated_by", "generated_at", "verification", "results"],
   "properties": {
-    "schema_version": {"const": "1.0"},
-    "generated_by": {"type": "string", "minLength": 1},
+    "schema_version": {"const": "2.0"},
+    "run_id": {"type": "string", "minLength": 8, "maxLength": 128},
+    "gate": {"type": "string", "enum": ["Q4", "Q5"]},
+    "skill_id": {"type": "string", "minLength": 1},
+    "skill_version": {"type": "string", "minLength": 1},
+    "package_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "definition_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "generated_by": {"const": "skills-brain-eval-harness"},
     "generated_at": {"type": "string", "format": "date-time"},
     "source_commit": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "verified_by", "independent"],
+      "properties": {
+        "type": {"type": "string", "enum": ["deterministic", "human", "independent_model"]},
+        "verified_by": {"type": "string", "minLength": 1},
+        "independent": {"const": true}
+      }
+    },
     "results": {
       "type": "array",
       "minItems": 1,
