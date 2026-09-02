@@ -92,6 +92,28 @@ def test_generated_result_files_do_not_change_package_hash(tmp_path):
     assert before == after
 
 
+def test_generated_regression_baseline_does_not_change_package_hash(tmp_path):
+    skill = tmp_path / "skill"
+    write_skill(skill)
+    (skill / "evals").mkdir()
+    before = integrity.calculate(skill)["package_sha256"]
+    (skill / "evals" / "regression-baseline.json").write_text(
+        '{"verified": true, "metrics": {"success": 1.0}}', encoding="utf-8"
+    )
+    after = integrity.calculate(skill)["package_sha256"]
+    assert before == after
+
+
+def test_evaluation_definition_still_changes_package_hash(tmp_path):
+    skill = tmp_path / "skill"
+    write_skill(skill)
+    (skill / "evals").mkdir()
+    before = integrity.calculate(skill)["package_sha256"]
+    (skill / "evals" / "golden.yaml").write_text("schema_version: '1.0'\ntasks: []\n", encoding="utf-8")
+    after = integrity.calculate(skill)["package_sha256"]
+    assert before != after
+
+
 def test_agenticos_export_matches_schema_for_canonical_skill():
     skill_dir = ROOT / "skills" / "services" / "zabbix-proxi-monitor"
     payload = agenticos_export.build_export(
