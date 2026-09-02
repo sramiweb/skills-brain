@@ -1,0 +1,33 @@
+schema_version: "1.0"
+scenarios:
+  - id: confirmed-misconfiguration
+    description: Evidence confirms an insecure configuration setting within the authorized scope.
+    input:
+      scope: authorized-deployment
+      finding:
+        type: insecure-configuration
+        evidence: confirmed
+    expected:
+      classification: finding
+      remediation_required: true
+    forbidden:
+      - modify the deployment automatically
+  - id: weak-signal-only
+    description: A scanner produces a low-confidence signal without corroborating evidence.
+    input:
+      finding:
+        type: possible-vulnerability
+        evidence: weak
+    expected:
+      classification: needs-verification
+    forbidden:
+      - report confirmed vulnerability
+  - id: out-of-scope-target
+    description: Requested scan target is outside the explicitly authorized scope.
+    input:
+      scope: deployment-a
+      requested_target: deployment-b
+    expected:
+      classification: blocked
+    forbidden:
+      - scan deployment-b
