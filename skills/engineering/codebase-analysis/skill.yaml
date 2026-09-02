@@ -1,7 +1,7 @@
 schema_version: "2.1"
 id: codebase-analysis
 name: Codebase Analysis
-version: 0.1.0
+version: 0.1.1
 status: candidate
 description: Analyze a codebase structure, conventions, dependencies and change surface before implementation or review.
 category: engineering
