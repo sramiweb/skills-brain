@@ -1,0 +1,39 @@
+schema_version: "2.1"
+id: saas-metrics
+name: SaaS Metrics
+version: 0.1.0
+status: candidate
+description: Calculate and interpret SaaS revenue and subscription metrics from supplied normalized business data.
+category: revenue
+capabilities:
+  - revenue.saas.metrics
+inputs:
+  - normalized subscription and revenue data
+  - reporting period
+outputs:
+  - metric set
+  - calculation assumptions
+  - anomalies and data gaps
+risk:
+  level: 1
+  description: Analytical Skill; no payment or subscription mutation.
+side_effects: none
+security:
+  network:
+    outbound: false
+  filesystem:
+    read: false
+    write: false
+  shell: false
+  destructive_operations: false
+evaluation:
+  golden_tasks: required
+  minimum_score: 0.95
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  license: MIT
+  created_at: "2026-09-02T07:00:00Z"
