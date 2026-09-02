@@ -1,192 +1,426 @@
-# Skills Brain v2 — Spé««cifications
+# Skills Brain v2.1 — Spécification
 
-**Version** : 2.0  
-**Statut** : architecture cible  
-**Derniè««re MAJ** : 2026-09-01
+**Version :** 2.1  
+**Statut :** spécification normative  
+**Dernière mise à jour :** 2026-09-02
 
 ## 1. Vision
 
-**Skills Brain** est une plateforme open source permettant de définir, découvrir, valider, évaluer, sécuriser, composer et faire évoluer des compétences utilisables par des agents IA.
+Skills Brain est un **Skill Intelligence & Governance Plane** open source pour définir, versionner, découvrir, évaluer, sécuriser et faire évoluer des compétences réutilisables par des agents IA.
 
-Un Skill n'est pas simplement un prompt.  
-Un Skill représente une **capacité«« opérationnelle versionné««e et mesurable**.
+Un Skill décrit **comment réaliser une capacité**. Il ne s'accorde jamais lui-même des permissions runtime.
+
+```text
+Skill = HOW to do something
+Tool  = WITH WHAT to act
+```
 
 ## 2. Positionnement
 
-Skills Brain est **indé««pendant** d'AgenticOS et peut ê «tre utilisé par :
+Skills Brain reste indépendant du runtime. Il peut être consommé par AgenticOS ou adapté à d'autres environnements.
 
-- AgenticOS
-- Hermes Agent
-- Claude Code
-- Codex
-- OpenCode
-- Cursor
-- Autres agents compatibles avec SKILL.md
-
-**Skills Brain** = Systè««me de connaissance et gouvernance des compé««tences  
-**AgenticOS** = Runtime et orchestrateur
-
-## 3. Architecture Cible
-
+```text
+Skills Brain = Skills canoniques, capabilities, gouvernance, évaluation, protocoles
+AgenticOS    = orchestration, bindings locaux, tenants, policies, approvals, exécution
+Hermes       = runtime cognitif / raisonnement agentique
+MCP          = outils et actions autorisés
+LiteLLM      = routage des modèles
 ```
+
+Règle fondamentale :
+
+```text
+Skills Brain propose la connaissance.
+AgenticOS établit la confiance et les permissions.
+Hermes applique la compétence.
+MCP réalise les actions autorisées.
+```
+
+## 3. Architecture du dépôt
+
+```text
 skills-brain/
-│
-├── README.md                 # Vue d'ensemble
-├── SPECIFICATION.md          # Ce fichier
-├── LICENSE                   # MIT
-├── CHANGELOG.md              # Historique
-│
-├── standards/                # Règles communes
-│   ├── skill-spec-v2.md      # Spé««cification Skill
-│   ├── lifecycle.md          # Lifecycle (draft → retired)
-│   ├── security.md           # Security manifest
-│   ├── evaluation.md         # Quality gates
-│   ├── compatibility.md      # Compatibilité«« agents
-│   └── composition.md        # Composition de skills
-│
-├── schemas/                  # JSON Schemas
-│   ├── skill.schema.json     # skill.yaml
-│   ├── test.schema.json      # tests/scenarios.yaml
-│   ├── eval.schema.json      # evals/golden.yaml
-│   ├── decision.schema.json  # decision records
-│   └── capability.schema.json# Capability ontology
-│
-├── core/                     # Composants core (à«« venir)
-│   ├── skill-creator/
-│   ├── skill-reviewer/
-│   ├── skill-evaluator/
-│   ├── skill-resolver/
-│   ├── skill-composer/
-│   ├── skill-security-reviewer/
-│   ├── skill-deliberator/
-│   └── skill-retrospective/
-│
-├── skills/                   # Bibliothèque de skills
-│   ├── agenticos/            # Skills AgenticOS
-│   ├── templates/            # Templates gén ériques
-│   └── services/             # Services externes
-│
-├── protocols/                # Protocoles (à«« venir)
-│   ├── review/
-│   ├── debate/
-│   ├── red-team/
-│   ├── consensus/
-│   └── human-approval/
-│
-├── catalog/                  # Catalog (à«« venir)
-│   ├── index.json
-│   ├── capabilities.json
-│   ├── dependencies.json
-│   └── compatibility.json
-│
-├── adapters/                 # Adapters (à«« venir)
-│   ├── agenticos/
-│   ├── claude-code/
-│   ├── codex/
-│   ├── opencode/
-│   └── cursor/
-│
-├── tooling/                  # Outils CLI
-│   ├── validate.py           # Validation skills
-│   ├── catalog.py            # Géné «ration catalog
-│   ├── resolve.py            # Skill resolver
-│   ├── eval.py               # É «valuation
-│   └── graph.py              # Skill graph
-│
-├── tests/                    # Tests du repository
-│
-└── .github/
-    └── workflows/
-        └── skills-ci.yml     # CI/CD
+├── README.md
+├── SPECIFICATION.md
+├── standards/          # Règles normatives
+├── schemas/            # Contrats machine JSON Schema
+├── core/               # Meta-Skills de gouvernance
+├── skills/             # Packages de Skills canoniques
+├── protocols/          # Protocoles de débat et décision
+├── catalog/            # Index générés
+├── adapters/           # Contrats d'intégration runtime
+├── tooling/            # Validation, évaluation, catalogue, intégrité
+├── tests/              # Tests du repository/tooling
+└── .github/workflows/  # CI
 ```
 
-## 4. Responsabilit é s
+Le seul emplacement canonique des packages de Skills est `skills/`. Les standards ne doivent jamais contenir de copies exécutables de Skills.
 
-Skills Brain doit ré «pondre à «€ sept questions fondamentales :
+## 4. Package Skill v2.1
 
-1. **Quel Skill existe ?** — Catalog + Discovery
-2. **Quel Skill correspond le mieux à «€ cette mission ?** — Resolver + Ranking
-3. **Ce Skill est-il sû «€r ?** — Security Reviewer + Policies
-4. **Ce Skill fonctionne-t-il ré «€llement ?** — Evaluator + Tests
-5. **Avec quels agents/outils est-il compatible ?** — Compatibility Matrix
-6. **Existe-t-il un meilleur Skill ?** — Quality Score + Reputation
-7. **Que devons-nous am é liorer aprè««s son utilisation ?** — Retrospective + Feedback
+Un Skill canonique contient au minimum :
 
-## 5. Skill Structure v2
-
-```
-<skill-name>/
-│
-├── SKILL.md            # Portable pour agents (frontmatter minimal)
-├── skill.yaml          # Mé «tadonn ées machine (Skills Brain)
-│
-├── tests/
-│   └── scenarios.yaml  # Happy path, edge case, stress case
-│
-├── evals/
-│   └── golden.yaml     # Tâ««ches de ré «f érence
-│
-├── references/         # Documentation externe
-│
-└── CHANGELOG.md        # Historique des versions
+```text
+<skill>/
+├── SKILL.md
+└── skill.yaml
 ```
 
-## 6. Lifecycle
+Il peut également contenir :
 
-```
-DRAFT → REVIEW → CANDIDATE → APPROVED → ACTIVE → DEPRECATED → RETIRED
-                                       ↓
-                                  QUARANTINED (exception)
-```
-
-Aucun auto-publish : un agent ne peut jamais faire `CANDIDATE → ACTIVE` automatiquement pour un Skill avec side effects significatifs.
-
-## 7. Quality Gates
-
-| Gate | Description |
-|------|-------------|
-| Q0 | Schema (frontmatter, skill.yaml, format, encoding) |
-| Q1 | Static (scope, dependencies, permissions, security) |
-| Q2 | Scenario (happy path, edge case, stress case) |
-| Q3 | Sandbox (exé««cution sans effet dangereux) |
-| Q4 | Golden Tasks (ré««sultats comparé««s aux attentes) |
-| Q5 | Regression (comparaison old vs candidate) |
-
-## 8. Skill Score
-
-```
-skill_score =
-  capability_match
-×«€ quality_score
-×«€ compatibility
-×«€ context_match
-×«€ trust_score
-÷««« estimated_cost
+```text
+README.md
+CHANGELOG.md
+tests/
+evals/
+references/
+resources/
+scripts/
+fixtures/
 ```
 
-## 9. Principes Architecturaux
+`SKILL.md` contient les instructions portables destinées au raisonnement. `skill.yaml` contient le contrat machine de gouvernance.
 
-- **Don't create a Skill when one already exists**
-- **Don't trust a Skill before evaluating it**
-- **Don't activate a Skill before governing it**
-- **Don't duplicate a Skill when composition works**
-- **Don't improve a Skill without measuring regression**
-- **Don't execute a risky Skill without policy enforcement**
-- **Don't let one AI decide when independent review is justified**
+Tous les nouveaux manifests utilisent :
 
-## 10. Roadmap
+```yaml
+schema_version: "2.1"
+```
 
-| Phase | Objectif | Statut |
-|-------|----------|--------|
-| P0 | Nettoyage + Structure v2 | ✅ |
-| P1 | Skill Spec v2 + Schemas + Tooling | ✅ |
-| P2 | Quality (evaluator, golden tasks, scores) | ⏳ |
-| P3 | Intelligence (catalog, resolver, graph) | ⏳ |
-| P4 | Composition (DAG, composite skills) | ⏳ |
-| P5 | Deliberation (council, debate, decision) | ⏳ |
+Le schéma strict de référence est `schemas/skill.schema.json` avec `additionalProperties: false`.
 
-## 11. R é f é rences
+Le schéma `schemas/skill-v2.0.schema.json` existe uniquement pour compatibilité/migration de manifests historiques ; il ne doit pas être utilisé pour créer de nouveaux Skills.
 
-- [`standards/skill-spec-v2.md`](./standards/skill-spec-v2.md)
-- [`schemas/skill.schema.json`](./schemas/skill.schema.json)
-- [`README.md`](./README.md)
+## 5. Identité et compatibilité
+
+Chaque Skill possède un `id` canonique stable et un `version` SemVer.
+
+Les anciennes identités peuvent être conservées via `aliases` afin de migrer sans maintenir plusieurs copies physiques du même Skill.
+
+Un Skill peut déclarer une compatibilité runtime, par exemple :
+
+```yaml
+compatibility:
+  agenticos: ">=3.1"
+```
+
+La compatibilité déclarée n'accorde aucune permission.
+
+## 6. Capability Ontology
+
+Les Skills déclarent des **capabilities logiques**, jamais des outils vendor-specific comme vérité canonique.
+
+Exemples :
+
+```text
+product.discover
+sales.lead.qualify
+engineering.code.review
+sre.application.health
+database.postgres.diagnose
+```
+
+L'ontologie machine est définie dans `standards/capabilities.yaml` et validée par `schemas/capability.schema.json`.
+
+Les besoins d'accès sont déclarés séparément comme `tool_capabilities` :
+
+```text
+filesystem.read
+logs.read
+monitoring.read
+network.outbound
+```
+
+AgenticOS mappe ensuite ces exigences logiques vers ses connecteurs et outils MCP réels.
+
+## 7. Sécurité et autorité
+
+Un Skill déclare :
+
+- niveau de risque ;
+- classe de side effect ;
+- contraintes réseau ;
+- accès filesystem ;
+- besoin shell ;
+- opérations destructives ;
+- classes de données autorisées lorsque nécessaire.
+
+Classes de side effects :
+
+```text
+none
+local
+reversible
+external
+destructive
+```
+
+Le runtime consommateur doit être plus restrictif ou égal aux besoins du Skill, jamais plus permissif par simple demande du Skill.
+
+Pour AgenticOS :
+
+```text
+effective permissions = intersection(
+  Skill requirements,
+  AgenticOS binding,
+  tenant policy,
+  MCP/tool policy
+)
+```
+
+Toute incompatibilité doit être fail-closed.
+
+## 8. Lifecycle
+
+Lifecycle canonique :
+
+```text
+DRAFT
+  -> REVIEW
+  -> CANDIDATE
+  -> APPROVED
+  -> ACTIVE
+  -> DEPRECATED
+  -> RETIRED
+
+QUARANTINED = état de sécurité exceptionnel
+```
+
+Un runtime peut gérer un lifecycle de déploiement distinct : disponible, téléchargé, installé, activé, désactivé, quarantined.
+
+Un Skill `candidate` n'est pas automatiquement production-ready.
+
+## 9. Quality Gates Q0–Q5
+
+Les définitions canoniques sont :
+
+| Gate | Signification |
+|---|---|
+| Q0 | Schema |
+| Q1 | Static quality |
+| Q2 | Scenario tests |
+| Q3 | Security / sandbox |
+| Q4 | Golden tasks |
+| Q5 | Regression |
+
+`tooling/evaluator.py`, la CI et la documentation doivent utiliser ces mêmes définitions.
+
+Q4 et Q5 ne peuvent pas être déclarés PASS par simple présence d'un fichier de définition. Ils nécessitent une **preuve d'exécution vérifiée**.
+
+Les résultats runtime attendus doivent porter explicitement une preuve telle que :
+
+```json
+{"verified": true}
+```
+
+La CI bloque un Skill `approved` ou `active` qui ne satisfait pas les gates exigés.
+
+## 10. Intégrité Supply Chain
+
+Skills Brain définit trois hashes :
+
+```text
+skill_sha256
+manifest_sha256
+package_sha256
+```
+
+La norme détaillée est `standards/integrity.md`.
+
+`package_sha256` couvre par défaut **tous les fichiers du package**, sauf exclusions explicites documentées. Cela évite qu'un nouveau répertoire `scripts/`, `resources/` ou `assets/` échappe silencieusement au contrôle d'intégrité.
+
+Le champ `integrity` éventuel de `skill.yaml` est exclu du hash canonique pour éviter l'auto-référence.
+
+Un runtime doit pinner :
+
+```text
+source commit/tag résolu
++
+package_sha256
+```
+
+Un mismatch d'intégrité doit bloquer l'installation/l'exécution.
+
+## 11. AgenticOS Adapter Contract
+
+`adapters/agenticos/` exporte un contrat de gouvernance conforme à `schemas/agenticos-export.schema.json`.
+
+L'export contient :
+
+- identité et version du Skill ;
+- source repository/commit/path ;
+- capabilities ;
+- exigences logiques d'outils ;
+- risque, side effects, sécurité et évaluation ;
+- hashes d'intégrité.
+
+Il ne contient et ne doit jamais accorder :
+
+- tenant ;
+- agent runtime ;
+- connecteur MCP ;
+- outil MCP concret ;
+- credentials ;
+- mounts ;
+- network profile ;
+- approbation ;
+- permission d'exécution.
+
+Ces éléments restent exclusivement locaux à AgenticOS.
+
+## 12. Deliberation
+
+Skills Brain fournit des protocoles de débat réutilisables :
+
+- `strategic-debate-v1` ;
+- `technical-debate-v1` ;
+- `operational-debate-v1`.
+
+Principes :
+
+- premier tour indépendant ;
+- arguments fondés sur preuves ;
+- cross-examination ;
+- positions révisées ;
+- dissent conservé ;
+- jugement indépendant ;
+- security veto ;
+- coût/rounds bornés ;
+- validation humaine lorsque la policy runtime l'exige.
+
+La délibération de Skills Brain concerne la qualité/sélection/promotion des Skills. Une délibération AgenticOS concerne l'autorisation d'une action réelle dans un contexte runtime. Les deux responsabilités ne doivent pas être confondues.
+
+## 13. Learning
+
+Skills Brain distingue mémoire et apprentissage :
+
+```text
+SIGNAL
+  -> PATTERN
+  -> HYPOTHESIS
+  -> VERIFIED LEARNING
+  -> OPERATIONALIZED KNOWLEDGE
+```
+
+Le cycle d'amélioration est :
+
+```text
+Outcome
+  -> Retrospective
+  -> Improvement Proposal
+  -> Tests
+  -> Evaluation
+  -> Review / Debate
+  -> Approval
+  -> Skill vNext
+```
+
+Aucun feedback runtime ne modifie automatiquement un Skill production.
+
+## 14. Meta-Skills Core
+
+Composants actuellement présents :
+
+- `skill-creator` ;
+- `skill-reviewer` ;
+- `skill-evaluator` ;
+- `skill-deliberator` ;
+- `skill-retrospective`.
+
+Le resolver avancé, la composition et le security reviewer spécialisé restent des étapes ultérieures.
+
+## 15. Catalogue
+
+`tooling/catalog.py` génère :
+
+```text
+catalog/index.json
+catalog/capabilities.json
+catalog/dependencies.json
+catalog/compatibility.json
+```
+
+Le catalogue est dérivé des manifests canoniques. Il ne devient pas une seconde source de vérité.
+
+## 16. Klerbot comme Golden Tenant
+
+Klerbot sert de premier cas end-to-end pour valider la séparation entre Skills génériques et contexte tenant.
+
+Les méthodes réutilisables restent dans leurs domaines génériques :
+
+```text
+market/
+product/
+customer/
+revenue/
+growth/
+content/
+sales/
+engineering/
+sre/
+databases/
+```
+
+`skills/klerbot/` contient uniquement du contexte ou des conventions Klerbot qui ne sont pas généralisables.
+
+## 17. Validation et CI
+
+Commandes de référence :
+
+```bash
+pip install -r requirements-dev.txt
+python tooling/validate.py --all
+pytest -q
+python tooling/evaluator.py
+python tooling/catalog.py
+```
+
+La CI vérifie notamment :
+
+- UTF-8 ;
+- schema v2.1 ;
+- capability ontology ;
+- syntaxe Python ;
+- tests ;
+- calcul d'intégrité de tous les packages ;
+- evidence Q0–Q5 ;
+- interdiction de promotion sans preuves ;
+- génération du catalogue.
+
+## 18. Anti-patterns interdits
+
+Ne pas :
+
+- charger `main` dynamiquement pendant une mission ;
+- laisser un worker installer un Skill ;
+- exécuter automatiquement du code upstream pour établir la confiance ;
+- accorder les outils demandés par un Skill sans policy locale ;
+- confondre Skill, Agent et Tool ;
+- maintenir plusieurs copies physiques du même Skill ;
+- considérer un score de qualité comme une autorisation ;
+- fabriquer des résultats Golden/Regression ;
+- permettre à un Skill de réduire son niveau de risque ;
+- auto-modifier un Skill de production depuis le feedback runtime.
+
+## 19. Roadmap
+
+| Phase | Objectif | État v2.1 |
+|---|---|---|
+| P0 | Structure canonique + nettoyage des doublons | Réalisé |
+| P1 | Schema strict + CI + ontology | Réalisé |
+| P2 | Q0–Q5 evidence-based + Golden/Regression harness | En cours |
+| P3 | Intégrité supply-chain + adapter AgenticOS | En cours avancé |
+| P4 | Catalogue + resolver intelligent | Catalogue réalisé, resolver à renforcer |
+| P5 | Learning / retrospective | Fondation réalisée |
+| P6 | Deliberation | Fondation réalisée |
+| P7 | Composition / reputation / adapters supplémentaires | Planifié |
+
+## 20. Références normatives
+
+- `standards/skill-spec-v2.md`
+- `standards/capabilities.yaml`
+- `standards/integrity.md`
+- `standards/deliberation.md`
+- `standards/learning.md`
+- `schemas/skill.schema.json`
+- `schemas/agenticos-export.schema.json`
