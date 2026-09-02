@@ -2,9 +2,11 @@
 """Evidence-based Skills Brain evaluator (Q0-Q5).
 
 The evaluator never fabricates execution evidence. Q4/Q5 require result artifacts
-produced by an external evaluation harness before they can pass.
+produced by the evaluation harness from external execution plus independent
+verification. Evidence is bound to the exact Skill package and definition hash.
 """
 
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -18,6 +20,8 @@ except ImportError as exc:
 
 ROOT = Path(__file__).resolve().parent.parent
 SKILLS_ROOT = ROOT / "skills"
+
+from integrity import calculate
 
 QUALITY_GATES = {
     "Q0": {"name": "Schema", "weight": 0.20},
@@ -39,13 +43,24 @@ def _json(path: Path):
         return json.load(handle)
 
 
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 def _validate_document(path: Path, schema_name: str):
     if not path.exists():
-        return False, [f"Missing {path.relative_to(ROOT)}"]
+        try:
+            rendered = path.relative_to(ROOT)
+        except ValueError:
+            rendered = path
+        return False, [f"Missing {rendered}"]
     try:
         data = _yaml(path) if path.suffix in {".yaml", ".yml"} else _json(path)
         schema = _json(ROOT / "schemas" / schema_name)
-        jsonschema.validate(data, schema)
+        validator = jsonschema.Draft202012Validator(schema, format_checker=jsonschema.FormatChecker())
+        errors = sorted(validator.iter_errors(data), key=lambda error: list(error.path))
+        if errors:
+            return False, [error.message for error in errors[:8]]
         return True, []
     except Exception as exc:
         return False, [str(exc)]
@@ -94,7 +109,20 @@ def check_q3(skill_dir: Path):
     return _validate_document(path, "security-tests.schema.json")
 
 
-def _result_gate(skill_dir: Path, definition_name: str, result_name: str, definition_schema: str, result_schema: str, optional: bool = False):
+def _definition_ids(definition_name: str, data: dict) -> list[str]:
+    if definition_name == "golden.yaml":
+        return [item["id"] for item in data["tasks"]]
+    return [item["id"] for item in data["checks"]]
+
+
+def _result_gate(
+    skill_dir: Path,
+    definition_name: str,
+    result_name: str,
+    definition_schema: str,
+    result_schema: str,
+    optional: bool = False,
+):
     definition_path = skill_dir / "evals" / definition_name
     result_path = skill_dir / "evals" / result_name
 
@@ -106,12 +134,43 @@ def _result_gate(skill_dir: Path, definition_name: str, result_name: str, defini
         return False, issues
     ok, issues = _validate_document(result_path, result_schema)
     if not ok:
-        return False, issues + ["Execution evidence is required; do not hand-author PASS results"]
+        return False, issues + ["Execution evidence is required; use tooling/eval_harness.py and do not hand-author PASS results"]
 
+    manifest = _yaml(skill_dir / "skill.yaml")
+    definition = _yaml(definition_path)
     data = _json(result_path)
-    failed = [item.get("id", "unknown") for item in data.get("results", []) if item.get("status") != "pass" or not item.get("verified", False)]
+    expected_gate = "Q4" if definition_name == "golden.yaml" else "Q5"
+    evidence_issues = []
+
+    if data.get("gate") != expected_gate:
+        evidence_issues.append(f"result gate mismatch: expected {expected_gate}")
+    if data.get("skill_id") != manifest.get("id"):
+        evidence_issues.append("result skill_id does not match current manifest")
+    if data.get("skill_version") != str(manifest.get("version")):
+        evidence_issues.append("result skill_version does not match current manifest")
+
+    current_package = calculate(skill_dir)["package_sha256"]
+    if data.get("package_sha256") != current_package:
+        evidence_issues.append("result package_sha256 is stale or does not match current Skill package")
+    if data.get("definition_sha256") != _sha256(definition_path):
+        evidence_issues.append("result definition_sha256 is stale or does not match current evaluation definition")
+
+    expected_ids = _definition_ids(definition_name, definition)
+    actual_ids = [item.get("id") for item in data.get("results", [])]
+    if len(actual_ids) != len(set(actual_ids)):
+        evidence_issues.append("duplicate result ids")
+    if set(actual_ids) != set(expected_ids):
+        evidence_issues.append("result ids do not exactly cover the current evaluation definition")
+
+    failed = []
+    for item in data.get("results", []):
+        if item.get("status") != "pass" or not item.get("verified", False) or float(item.get("score", 0)) < 1.0:
+            failed.append(item.get("id", "unknown"))
     if failed:
-        return False, [f"Unverified or failing result(s): {', '.join(failed)}"]
+        evidence_issues.append(f"Unverified, incomplete or failing result(s): {', '.join(failed)}")
+
+    if evidence_issues:
+        return False, evidence_issues
     return True, []
 
 

@@ -49,7 +49,8 @@ skills-brain/
 ├── protocols/          # Protocoles de débat et décision
 ├── catalog/            # Index générés
 ├── adapters/           # Contrats d'intégration runtime
-├── tooling/            # Validation, évaluation, catalogue, intégrité
+├── tooling/            # Validation, évaluation, catalogue, résolution, intégrité
+├── examples/           # Requêtes et contrats d'exemple
 ├── tests/              # Tests du repository/tooling
 └── .github/workflows/  # CI
 ```
@@ -200,20 +201,47 @@ Les définitions canoniques sont :
 | Q1 | Static quality |
 | Q2 | Scenario tests |
 | Q3 | Security / sandbox |
-| Q4 | Golden tasks |
-| Q5 | Regression |
+| Q4 | Golden Task execution |
+| Q5 | Regression evidence |
 
-`tooling/evaluator.py`, la CI et la documentation doivent utiliser ces mêmes définitions.
+`tooling/evaluator.py`, `tooling/eval_harness.py`, la CI et la documentation doivent utiliser ces mêmes définitions.
 
-Q4 et Q5 ne peuvent pas être déclarés PASS par simple présence d'un fichier de définition. Ils nécessitent une **preuve d'exécution vérifiée**.
+Q4 et Q5 ne peuvent pas être déclarés PASS par simple présence d'un fichier de définition ou par un résultat auto-déclaré. Ils nécessitent une chaîne de preuve :
 
-Les résultats runtime attendus doivent porter explicitement une preuve telle que :
-
-```json
-{"verified": true}
+```text
+PREPARE
+  -> EXECUTION EXTERNE
+  -> VERIFICATION INDEPENDANTE
+  -> FINALIZE
+  -> RE-VALIDATION EVALUATOR
 ```
 
+`tooling/eval_harness.py prepare` lie un run à :
+
+- l'ID et la version du Skill ;
+- son `package_sha256` ;
+- le hash exact de `golden.yaml` ou `regression.yaml` ;
+- les IDs et critères/checks exacts ;
+- le commit source lorsqu'il est disponible.
+
+Le runner externe produit une observation conforme à `schemas/eval-runner-results.schema.json`. Un vérificateur distinct produit une vérification conforme à `schemas/eval-verification.schema.json`.
+
+Le harness refuse la finalisation lorsque :
+
+- le package a changé depuis `prepare` ;
+- la définition d'évaluation a changé ;
+- les IDs ne couvrent pas exactement la requête ;
+- un critère ou comportement interdit n'est pas vérifié ;
+- runner et verifier utilisent la même identité ;
+- `independent` n'est pas vrai.
+
+Le résultat canonique `*-results.json` est conforme à `schemas/eval-results.schema.json` v2.0. `tooling/evaluator.py` recalcule ensuite package hash, definition hash et couverture des IDs avant d'accepter Q4/Q5.
+
+Une preuve Q4/Q5 devient donc automatiquement stale dès que le Skill ou sa définition d'évaluation change.
+
 La CI bloque un Skill `approved` ou `active` qui ne satisfait pas les gates exigés.
+
+La norme complète est `standards/evaluation.md`.
 
 ## 10. Intégrité Supply Chain
 
@@ -227,9 +255,9 @@ package_sha256
 
 La norme détaillée est `standards/integrity.md`.
 
-`package_sha256` couvre par défaut **tous les fichiers du package**, sauf exclusions explicites documentées. Cela évite qu'un nouveau répertoire `scripts/`, `resources/` ou `assets/` échappe silencieusement au contrôle d'intégrité.
+`package_sha256` couvre par défaut **tous les fichiers du package**, sauf exclusions explicites documentées. Cela évite qu'un nouveau répertoire `scripts/`, `resources` ou `assets/` échappe silencieusement au contrôle d'intégrité.
 
-Le champ `integrity` éventuel de `skill.yaml` est exclu du hash canonique pour éviter l'auto-référence.
+Le champ `integrity` éventuel de `skill.yaml` est exclu du hash canonique pour éviter l'auto-référence. Les fichiers générés `*-results.json` sont exclus du package hash : une preuve d'évaluation ne doit pas changer l'identité du package évalué.
 
 Un runtime doit pinner :
 
@@ -323,13 +351,29 @@ Composants actuellement présents :
 
 - `skill-creator` ;
 - `skill-reviewer` ;
+- `skill-security-reviewer` ;
 - `skill-evaluator` ;
+- `skill-resolver` ;
+- `skill-composer` ;
 - `skill-deliberator` ;
 - `skill-retrospective`.
 
-Le resolver avancé, la composition et le security reviewer spécialisé restent des étapes ultérieures.
+Responsabilités :
 
-## 15. Catalogue
+```text
+creator             -> crée un candidat
+reviewer            -> revue générale indépendante
+security-reviewer   -> revue sécurité/supply-chain/least-privilege
+ evaluator           -> Q0-Q5 et preuves
+resolver            -> candidats éligibles, authorization=not_granted
+composer            -> plan multi-Skill minimal, authorization=not_granted
+deliberator          -> débat gouverné
+retrospective       -> apprentissage à partir d'outcomes
+```
+
+La composition ne peut utiliser que des Skills déjà éligibles et ne transforme jamais l'union de leurs requirements en permissions runtime.
+
+## 15. Catalogue et résolution
 
 `tooling/catalog.py` génère :
 
@@ -341,6 +385,14 @@ catalog/compatibility.json
 ```
 
 Le catalogue est dérivé des manifests canoniques. Il ne devient pas une seconde source de vérité.
+
+`tooling/resolver.py` filtre d'abord l'éligibilité : ontology, capability overlap, lifecycle, risk ceiling, tools, data class et compatibilité. Le ranking n'intervient qu'après ces filtres et retourne toujours :
+
+```json
+{"authorization": "not_granted"}
+```
+
+La norme est `standards/resolution.md`.
 
 ## 16. Klerbot comme Golden Tenant
 
@@ -373,6 +425,8 @@ python tooling/validate.py --all
 pytest -q
 python tooling/evaluator.py
 python tooling/catalog.py
+python tooling/resolver.py examples/resolution-request.json
+python tooling/eval_harness.py --help
 ```
 
 La CI vérifie notamment :
@@ -399,6 +453,8 @@ Ne pas :
 - maintenir plusieurs copies physiques du même Skill ;
 - considérer un score de qualité comme une autorisation ;
 - fabriquer des résultats Golden/Regression ;
+- accepter un résultat Q4/Q5 stale après modification du package ou de sa définition ;
+- accepter l'auto-vérification runner=verifier ;
 - permettre à un Skill de réduire son niveau de risque ;
 - auto-modifier un Skill de production depuis le feedback runtime.
 
@@ -408,19 +464,25 @@ Ne pas :
 |---|---|---|
 | P0 | Structure canonique + nettoyage des doublons | Réalisé |
 | P1 | Schema strict + CI + ontology | Réalisé |
-| P2 | Q0–Q5 evidence-based + Golden/Regression harness | En cours |
-| P3 | Intégrité supply-chain + adapter AgenticOS | En cours avancé |
-| P4 | Catalogue + resolver intelligent | Catalogue réalisé, resolver à renforcer |
+| P2 | Q0–Q5 evidence-based + Golden/Regression harness | Harness implémenté ; qualification avec runners runtime externes en cours |
+| P3 | Intégrité supply-chain + adapter AgenticOS | Réalisé |
+| P4 | Catalogue + resolver + composition | Resolver v1 et guidance composer implémentés ; orchestration multi-Skill runtime à venir |
 | P5 | Learning / retrospective | Fondation réalisée |
 | P6 | Deliberation | Fondation réalisée |
-| P7 | Composition / reputation / adapters supplémentaires | Planifié |
+| P7 | Reputation / adapters supplémentaires / composition avancée | Planifié |
 
 ## 20. Références normatives
 
 - `standards/skill-spec-v2.md`
 - `standards/capabilities.yaml`
+- `standards/evaluation.md`
 - `standards/integrity.md`
+- `standards/resolution.md`
 - `standards/deliberation.md`
 - `standards/learning.md`
 - `schemas/skill.schema.json`
+- `schemas/eval-run.schema.json`
+- `schemas/eval-runner-results.schema.json`
+- `schemas/eval-verification.schema.json`
+- `schemas/eval-results.schema.json`
 - `schemas/agenticos-export.schema.json`
