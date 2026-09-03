@@ -1,0 +1,54 @@
+schema_version: "2.1"
+id: klerbot-brand-voice
+name: Klerbot Brand Voice
+version: 0.1.0
+status: candidate
+description: Provide Klerbot-specific audience, tone, message framing and claim discipline to reusable writing Skills.
+category: klerbot
+capabilities:
+  - klerbot.brand.voice
+inputs:
+  - Klerbot message objective or draft
+  - target audience and channel
+  - optional fresh product evidence
+outputs:
+  - Klerbot voice brief
+  - allowed and unverified claims
+  - tone and framing corrections
+data_classes:
+  allowed: [S0, S1, S2]
+risk:
+  level: 1
+  description: Read-only communication guidance; stale or unsupported claims can create customer, legal or trust risk.
+side_effects: none
+security:
+  network:
+    outbound: false
+  filesystem:
+    read: false
+    write: false
+  shell: false
+  destructive_operations: false
+relationships:
+  related:
+    - linkedin-post-writing
+    - linkedin-article-writing
+    - instagram-caption-writing
+    - instagram-carousel-writing
+    - social-content-repurposing
+evaluation:
+  golden_tasks: required
+  minimum_score: 0.90
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  derived_from:
+    - https://github.com/sramiweb/wissql
+  license: MIT
+  created_at: "2026-09-03T10:00:00Z"
+  last_review: "2026-09-03T10:00:00Z"
+compatibility:
+  agenticos: ">=3.1"
