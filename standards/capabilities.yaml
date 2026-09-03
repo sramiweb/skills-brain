@@ -167,6 +167,23 @@ capabilities:
     domain: database
     status: reserved
 
+  klerbot.product.context:
+    description: Provide verified Klerbot product, user, business-model and workflow context to reusable Skills.
+    domain: klerbot
+    status: reserved
+  klerbot.architecture:
+    description: Provide Klerbot technical architecture, service boundaries and critical engineering invariants.
+    domain: klerbot
+    status: reserved
+  klerbot.code.conventions:
+    description: Provide Klerbot-specific coding, validation, security and quality conventions.
+    domain: klerbot
+    status: reserved
+  klerbot.brand.voice:
+    description: Provide Klerbot-specific audience, tone, message framing and claim discipline.
+    domain: klerbot
+    status: reserved
+
 tool_capabilities:
   filesystem.read:
     description: Read allowed files.
