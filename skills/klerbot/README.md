@@ -6,34 +6,35 @@ This directory contains **portable Klerbot context knowledge**, not AgenticOS ru
 
 ## Implemented context Skills
 
-Wave 1 establishes four context packages that have distinct responsibilities:
+The reconciled v2.1 pack contains seven context packages with distinct responsibilities:
+
+### Product and engineering context
 
 - `klerbot-product-context` — verified product, users, business model and workflow context.
 - `klerbot-architecture` — technical stack, service boundaries and architecture invariants.
 - `klerbot-code-conventions` — repository-specific engineering and validation rules.
-- `klerbot-brand-voice` — audience, tone, message framing and claim discipline.
 
-These packages are `candidate` until their golden-task evaluations are recorded.
+### Market and commercial context
 
-## Planned context packages
+- `klerbot-ideal-customer-profile` — evidence-qualified buyer/user roles, fit hypotheses and disqualifiers.
+- `klerbot-market-context` — durable positioning and comparison axes; dynamic market claims require fresh research.
+- `klerbot-sales-messaging` — approved value themes, objection framing and commercial claim boundaries.
+- `klerbot-brand-voice` — audience, tone, message framing and publishing claim discipline.
 
-Additional Klerbot-specific context is valid only when it contains real, maintained knowledge rather than placeholders. Candidate areas include:
-
-- `klerbot-market-context`
-- `klerbot-ideal-customer-profile`
-- `klerbot-sales-messaging`
-
-Do not create them merely to mirror an AgenticOS agent. Their content must remain independently useful and materially different from an existing generic Skill.
+All seven packages remain `candidate` until their golden-task evaluations provide promotion evidence.
 
 ## Source-of-truth rule
 
 Canonical context may be derived from the Klerbot product repository, but Skills Brain must not pretend a snapshot is always current.
 
-When fresher product-repository or runtime evidence contradicts a Klerbot context Skill:
+When fresher product-repository, customer, pipeline, market or runtime evidence contradicts a Klerbot context Skill:
 
 1. prefer the fresher evidence;
-2. report the drift;
-3. submit a governed update to the context Skill if the change is stable and reusable.
+2. label its evidence class and observation date when relevant;
+3. report the drift;
+4. submit a governed update to the context Skill if the change is stable and reusable.
+
+Product positioning is not automatically customer or market proof. In particular, ICP and market Skills must distinguish verified product roles from positioning hypotheses and independently observed evidence.
 
 ## Not allowed here
 
@@ -78,9 +79,11 @@ klerbot-product-context
 
 is preferred to a `klerbot-roadmap-method` package unless Klerbot later develops a genuinely distinct, independently useful prioritization methodology.
 
-The same rule applies to market research, customer health, SaaS metrics, code review, release readiness, SRE diagnosis and security review: reusable methods stay in their generic domain categories and consume Klerbot context only when needed.
+The same rule applies to market research, lead qualification, email personalization, customer health, SaaS metrics, code review, release readiness, SRE diagnosis and security review: reusable methods stay in their generic domain categories and consume Klerbot context only when needed.
 
 ## Composition examples
+
+### Engineering review
 
 ```text
 code-review
@@ -88,15 +91,42 @@ code-review
 + klerbot-architecture
 ```
 
+### Product discovery
+
 ```text
 product-discovery
 + klerbot-product-context
++ klerbot-ideal-customer-profile
 ```
+
+### Roadmap
 
 ```text
 roadmap-prioritization
 + klerbot-product-context
++ klerbot-ideal-customer-profile
 ```
+
+### Competitor analysis
+
+```text
+competitor-analysis
++ klerbot-market-context
++ klerbot-product-context
++ klerbot-ideal-customer-profile
+```
+
+### Qualified outbound email
+
+```text
+lead-qualification
++ klerbot-ideal-customer-profile
++ klerbot-sales-messaging
++ klerbot-brand-voice
++ email-personalization
+```
+
+### Social content
 
 ```text
 linkedin-post-writing
@@ -104,7 +134,7 @@ linkedin-post-writing
 + klerbot-product-context
 ```
 
-The context Skills add knowledge and constraints. They never widen runtime tool permissions.
+The context Skills add knowledge and constraints. They never widen runtime tool permissions or authorize delivery/actions.
 
 ## Target domains
 
