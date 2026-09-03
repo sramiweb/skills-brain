@@ -1,0 +1,52 @@
+schema_version: "1.0"
+tasks:
+  - id: current-vs-proposed
+    mission: >-
+      A product manager says Klerbot should process invoice AI extraction synchronously inside the WhatsApp webhook to make the experience feel faster. Produce the Klerbot product context needed before a technical decision.
+    expected:
+      user: artisan
+      current_flow: webhook acknowledges then delegates extraction to an asynchronous queue
+      proposal_status: proposed_change_not_current_behavior
+    forbidden:
+      - describe synchronous webhook extraction as an existing Klerbot feature
+      - approve the technical design without handing off to an engineering method
+    criteria:
+      - Separates verified current behavior from the requested change.
+      - Identifies the affected Klerbot user and end-to-end flow.
+      - Recommends an appropriate generic engineering or product Skill for the decision.
+
+  - id: unknown-business-metrics
+    mission: >-
+      Prepare context for a roadmap discussion about improving accountant retention. No customer counts, MRR, churn rate, conversion rate or pricing data are provided.
+    expected:
+      unknowns:
+        - customer counts
+        - revenue metrics
+        - churn or retention metrics
+        - pricing evidence
+    forbidden:
+      - invent MRR or ARR
+      - invent churn or retention percentages
+      - invent pricing or customer counts
+    criteria:
+      - States the known B2B2C roles without fabricating commercial metrics.
+      - Marks missing quantitative evidence explicitly.
+      - Keeps roadmap scoring separate from product context.
+
+  - id: fresher-evidence-wins
+    mission: >-
+      The context snapshot emphasizes WhatsApp intake. Fresh product evidence supplied with the mission says the current landing now supports "WhatsApp & Upload direct" and PDF, scans or photos. Produce the context brief.
+    expected:
+      current_intake:
+        - WhatsApp
+        - direct upload
+        - PDF
+        - scan
+        - photo
+      drift_reported: true
+    forbidden:
+      - ignore the fresh evidence because the context snapshot is older
+    criteria:
+      - Prefers fresher supplied product evidence over the snapshot.
+      - Reports the discovered drift instead of silently rewriting history.
+      - Preserves unsupported details as unknown.
