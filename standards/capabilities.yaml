@@ -183,6 +183,18 @@ capabilities:
     description: Provide Klerbot-specific audience, tone, message framing and claim discipline.
     domain: klerbot
     status: reserved
+  klerbot.ideal.customer.profile:
+    description: Provide evidence-qualified Klerbot buyer/user roles, fit hypotheses and disqualifiers.
+    domain: klerbot
+    status: reserved
+  klerbot.market.context:
+    description: Provide durable Klerbot positioning and comparison axes while requiring fresh evidence for dynamic market claims.
+    domain: klerbot
+    status: reserved
+  klerbot.sales.messaging:
+    description: Provide Klerbot-specific commercial value themes, objection framing and claim boundaries.
+    domain: klerbot
+    status: reserved
 
 tool_capabilities:
   filesystem.read:
