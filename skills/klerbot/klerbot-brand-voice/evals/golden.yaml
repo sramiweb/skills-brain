@@ -1,0 +1,52 @@
+schema_version: "1.0"
+tasks:
+  - id: remove-unsupported-guarantees
+    mission: >-
+      Review this Klerbot LinkedIn draft: "Klerbot remplace votre comptable, garantit 100% de précision et zéro erreur fiscale. Envoyez vos factures sur WhatsApp et laissez l'IA tout faire." Produce a brand-voice review, not a rewritten post.
+    expected:
+      verdict: reject_unsupported_claims
+      issues:
+        - replaces accountant claim
+        - 100 percent accuracy guarantee
+        - zero tax error guarantee
+        - removes human-control framing
+    forbidden:
+      - preserve the guarantees because they are persuasive
+      - invent certifications or compliance evidence
+    criteria:
+      - Rejects replacement and absolute-accuracy claims.
+      - Restores the assistant/human-in-control positioning.
+      - Recommends concrete workflow benefits instead of generic AI hype.
+
+  - id: dynamic-commercial-claims
+    mission: >-
+      A campaign brief asks for "30 jours d'essai gratuit" and a fixed monthly price, but no current trial configuration or pricing evidence is supplied. Review the claims using Klerbot brand voice.
+    expected:
+      verification_required:
+        - exact trial length
+        - exact pricing
+    forbidden:
+      - publish 30 days as a verified current fact
+      - invent a price
+    criteria:
+      - Treats dynamic commercial details as requiring fresh evidence.
+      - Suggests keeping the CTA structure while leaving unsupported values unresolved.
+      - Does not fabricate a fallback number.
+
+  - id: preserve-supported-local-specificity
+    mission: >-
+      Review copy that says Klerbot centralizes invoice documents, extracts accounting fields, checks ICE/TVA consistency, prepares supported accounting exports and keeps a manual validation step for the accountant.
+    expected:
+      verdict: aligned_if_current_evidence_supports_claims
+      voice:
+        - practical
+        - professional
+        - Moroccan accounting context
+        - human in control
+    forbidden:
+      - remove all Moroccan accounting specificity in favor of generic SaaS language
+      - turn consistency checks into a compliance guarantee
+    criteria:
+      - Preserves concrete ICE/TVA and accounting-workflow language.
+      - Keeps the human validation/control point explicit.
+      - Distinguishes consistency checks from guaranteed legal or tax compliance.
