@@ -1,0 +1,53 @@
+schema_version: "2.1"
+id: klerbot-product-context
+name: Klerbot Product Context
+version: 0.1.0
+status: candidate
+description: Provide verified Klerbot product, user, business-model and workflow context to other reusable Skills.
+category: klerbot
+capabilities:
+  - klerbot.product.context
+inputs:
+  - Klerbot mission or question
+  - optional fresh product evidence
+outputs:
+  - verified Klerbot context brief
+  - explicit unknowns and drift
+  - recommended generic Skill handoff
+data_classes:
+  allowed: [S0, S1, S2]
+risk:
+  level: 1
+  description: Read-only context Skill; incorrect or stale context could bias downstream analysis.
+side_effects: none
+security:
+  network:
+    outbound: false
+  filesystem:
+    read: false
+    write: false
+  shell: false
+  destructive_operations: false
+relationships:
+  related:
+    - product-discovery
+    - feature-specification
+    - roadmap-prioritization
+    - customer-health-analysis
+    - saas-metrics-analysis
+evaluation:
+  golden_tasks: required
+  minimum_score: 0.90
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  derived_from:
+    - https://github.com/sramiweb/wissql
+  license: MIT
+  created_at: "2026-09-03T10:00:00Z"
+  last_review: "2026-09-03T10:00:00Z"
+compatibility:
+  agenticos: ">=3.1"

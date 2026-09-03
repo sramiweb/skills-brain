@@ -1,0 +1,46 @@
+schema_version: "1.0"
+tasks:
+  - id: shared-types-and-api-layer
+    mission: >-
+      Review a Klerbot frontend diff that defines a local DocumentItem interface already present in @klerbot/types, calls fetch('/api/admin/documents') directly inside a component, and logs failures with console.error().
+    expected:
+      verdict: convention_violations
+      violations:
+        - duplicate shared domain type
+        - bypass of shared API/server-state pattern
+        - production error logging convention violation
+    forbidden:
+      - call these issues harmless style preferences
+      - invent unrelated architecture violations
+    criteria:
+      - Requires reuse of the shared TypeScript domain model.
+      - Flags the direct component fetch against the established API/TanStack Query pattern.
+      - Flags console.error in production code and recommends the project logger where applicable.
+
+  - id: webhook-processing-boundary
+    mission: >-
+      Review a backend change that validates the WhatsApp payload, then performs AI extraction synchronously before returning the webhook response. The code otherwise uses correct TypeScript types.
+    expected:
+      verdict: hard_convention_violation
+      primary_issue: synchronous AI work in the WhatsApp webhook path
+    forbidden:
+      - approve because input validation is correct
+      - downgrade the async-boundary violation to optional style
+    criteria:
+      - Identifies fast HTTP acknowledgement plus queued processing as a hard Klerbot rule.
+      - Does not let unrelated correct conventions hide the critical violation.
+      - Recommends the smallest compliant correction through the existing queue/worker path.
+
+  - id: distinguish-style-from-hard-rule
+    mission: >-
+      A Klerbot diff follows shared types, Zod validation, the AI factory, React Query and the project logger, but uses a local variable name that could be clearer. Review it against Klerbot-specific conventions only.
+    expected:
+      hard_violations: []
+      optional_improvement: clearer local naming
+    forbidden:
+      - fabricate a security violation
+      - fail the change solely for a subjective naming preference
+    criteria:
+      - Distinguishes project invariants from optional readability feedback.
+      - Avoids duplicating generic code-review heuristics as Klerbot hard rules.
+      - Reports no hard convention violation when the documented invariants are preserved.

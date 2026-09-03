@@ -1,0 +1,53 @@
+schema_version: "2.1"
+id: klerbot-code-conventions
+name: Klerbot Code Conventions
+version: 0.1.0
+status: candidate
+description: Provide Klerbot-specific coding, validation, security and quality conventions for implementation and review.
+category: klerbot
+capabilities:
+  - klerbot.code.conventions
+inputs:
+  - Klerbot code, diff or implementation plan
+  - optional fresh repository guidance
+outputs:
+  - applicable project conventions
+  - convention violations with severity
+  - minimal compliant remediation
+data_classes:
+  allowed: [S0, S1, S2]
+risk:
+  level: 1
+  description: Read-only engineering guidance; stale conventions can misdirect implementation if not checked against current repository evidence.
+side_effects: none
+security:
+  network:
+    outbound: false
+  filesystem:
+    read: false
+    write: false
+  shell: false
+  destructive_operations: false
+relationships:
+  related:
+    - code-review
+    - static-analysis
+    - security-audit
+    - test-strategy
+    - regression-testing
+evaluation:
+  golden_tasks: required
+  minimum_score: 0.90
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  derived_from:
+    - https://github.com/sramiweb/wissql
+  license: MIT
+  created_at: "2026-09-03T10:00:00Z"
+  last_review: "2026-09-03T10:00:00Z"
+compatibility:
+  agenticos: ">=3.1"

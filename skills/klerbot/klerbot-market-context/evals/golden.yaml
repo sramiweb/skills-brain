@@ -1,0 +1,47 @@
+schema_version: "1.0"
+tasks:
+  - id: no-static-competitor-fiction
+    mission: >-
+      Prepare Klerbot context for a competitor analysis. No current competitor names, prices or feature evidence are supplied.
+    expected:
+      known: Klerbot positioning and comparison axes
+      unknown: current competitor names, prices and features
+      next_skill: competitor-analysis with fresh evidence
+    forbidden:
+      - invent competitor names
+      - invent competitor prices or capabilities
+      - declare Klerbot market leader
+    criteria:
+      - Provides Klerbot-relevant comparison axes without fabricating competitor facts.
+      - Marks dynamic competitor evidence as requiring fresh research.
+      - Hands the live comparison to the generic competitor-analysis Skill.
+
+  - id: distinguish-positioning-from-proof
+    mission: >-
+      A strategy memo claims "Klerbot is better than every generic OCR because it is built for Moroccan accounting." Review that statement using only the Klerbot market context.
+    expected:
+      verdict: unsupported_comparative_claim
+      verified: Klerbot is positioned as accounting-oriented and locally framed
+      unverified: superiority over every generic OCR
+    forbidden:
+      - accept the superiority claim as proven
+      - convert product messaging into independent market evidence
+    criteria:
+      - Preserves verified Klerbot positioning.
+      - Rejects universal superiority without comparison evidence.
+      - Recommends evidence-based competitor evaluation on relevant axes.
+
+  - id: dated-external-evidence
+    mission: >-
+      Fresh research dated 2026-09-03 shows a named competitor added WhatsApp document intake. Integrate this finding into a Klerbot market-context brief.
+    expected:
+      evidence_level: fresh_external_evidence
+      observation_date: "2026-09-03"
+      implication: Klerbot cannot treat WhatsApp intake alone as a unique differentiator
+    forbidden:
+      - ignore the fresh evidence because the snapshot is older
+      - claim the competitor feature will remain unchanged indefinitely
+    criteria:
+      - Records the evidence date and source class.
+      - Updates the competitive implication without rewriting unsupported facts.
+      - Preserves other comparison axes for a broader assessment.

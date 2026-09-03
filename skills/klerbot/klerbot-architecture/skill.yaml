@@ -1,0 +1,53 @@
+schema_version: "2.1"
+id: klerbot-architecture
+name: Klerbot Architecture
+version: 0.1.0
+status: candidate
+description: Provide Klerbot technical architecture, service boundaries and critical engineering invariants as reusable context.
+category: klerbot
+capabilities:
+  - klerbot.architecture
+inputs:
+  - Klerbot technical mission or proposed change
+  - optional fresh repository evidence
+outputs:
+  - architecture impact brief
+  - preserved and violated invariants
+  - dependencies, risks and unknowns
+data_classes:
+  allowed: [S0, S1, S2]
+risk:
+  level: 1
+  description: Read-only architecture context; stale context can bias technical decisions if not checked against fresher evidence.
+side_effects: none
+security:
+  network:
+    outbound: false
+  filesystem:
+    read: false
+    write: false
+  shell: false
+  destructive_operations: false
+relationships:
+  related:
+    - codebase-analysis
+    - code-review
+    - security-audit
+    - migration-planning
+    - test-strategy
+evaluation:
+  golden_tasks: required
+  minimum_score: 0.90
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  derived_from:
+    - https://github.com/sramiweb/wissql
+  license: MIT
+  created_at: "2026-09-03T10:00:00Z"
+  last_review: "2026-09-03T10:00:00Z"
+compatibility:
+  agenticos: ">=3.1"

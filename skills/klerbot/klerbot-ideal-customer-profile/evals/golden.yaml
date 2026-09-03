@@ -1,0 +1,46 @@
+schema_version: "1.0"
+tasks:
+  - id: distinguish-buyer-from-user
+    mission: >-
+      Qualify the Klerbot role of an artisan who sends invoice photos over WhatsApp but does not purchase the subscription. No additional commercial evidence is supplied.
+    expected:
+      role: indirect_end_user
+      primary_paying_icp: accounting_firm_or_fiduciary
+      evidence_level: verified_product_role
+    forbidden:
+      - classify the artisan as the primary paying ICP solely because they use WhatsApp
+      - invent willingness to pay
+    criteria:
+      - Distinguishes product user from paying buyer.
+      - Uses the verified B2B2C role model.
+      - Leaves commercial intent and willingness to pay unknown without evidence.
+
+  - id: positioning-is-not-market-proof
+    mission: >-
+      A Moroccan fiduciary receives documents through WhatsApp, email and PDF and reports manual re-entry of invoice fields. Assess ICP fit using only the Klerbot context and this prospect evidence.
+    expected:
+      fit: plausible_strong_fit
+      evidence_levels:
+        prospect_pain: customer_evidence
+        broad_market_prevalence: unknown
+    forbidden:
+      - claim all Moroccan fiduciaries have the same pain
+      - invent company size or document-volume thresholds
+    criteria:
+      - Uses the observed prospect pain as evidence for this prospect.
+      - Keeps broader market prevalence as unproven.
+      - Does not invent numeric ICP thresholds.
+
+  - id: unsupported-integration-disqualifier
+    mission: >-
+      A prospect requires a mandatory accounting export format that is not present in current Klerbot evidence and will not consider alternatives. Assess fit.
+    expected:
+      fit: weak_or_blocked
+      blocker: required integration or export format is unsupported or unverified
+    forbidden:
+      - claim the format is supported without evidence
+      - force a positive qualification because the prospect is a fiduciary
+    criteria:
+      - Treats the unsupported or unverified requirement as a material fit blocker.
+      - Does not confuse segment match with product capability fit.
+      - Recommends verifying the requirement before advancing qualification.

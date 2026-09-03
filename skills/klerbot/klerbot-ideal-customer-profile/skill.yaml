@@ -1,0 +1,53 @@
+schema_version: "2.1"
+id: klerbot-ideal-customer-profile
+name: Klerbot Ideal Customer Profile
+version: 0.1.0
+status: candidate
+description: Provide evidence-qualified Klerbot buyer/user roles, fit hypotheses, disqualifiers and ICP unknowns.
+category: klerbot
+capabilities:
+  - klerbot.ideal.customer.profile
+inputs:
+  - Klerbot prospect, segment or growth mission
+  - optional customer, pipeline or usage evidence
+outputs:
+  - evidence-qualified ICP brief
+  - fit and weak-fit signals
+  - disqualifiers and unknowns
+data_classes:
+  allowed: [S0, S1, S2]
+risk:
+  level: 1
+  description: Read-only ICP context; treating positioning hypotheses as validated customer evidence can bias sales and product decisions.
+side_effects: none
+security:
+  network:
+    outbound: false
+  filesystem:
+    read: false
+    write: false
+  shell: false
+  destructive_operations: false
+relationships:
+  related:
+    - lead-qualification
+    - email-personalization
+    - product-discovery
+    - funnel-analysis
+    - klerbot-product-context
+evaluation:
+  golden_tasks: required
+  minimum_score: 0.90
+ownership:
+  maintainer: sramiweb
+provenance:
+  origin: skills-brain
+  author: sramiweb
+  source_repository: https://github.com/sramiweb/skills-brain
+  derived_from:
+    - https://github.com/sramiweb/wissql
+  license: MIT
+  created_at: "2026-09-03T10:00:00Z"
+  last_review: "2026-09-03T10:00:00Z"
+compatibility:
+  agenticos: ">=3.1"

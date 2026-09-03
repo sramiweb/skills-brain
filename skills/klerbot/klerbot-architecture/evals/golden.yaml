@@ -1,0 +1,50 @@
+schema_version: "1.0"
+tasks:
+  - id: preserve-async-webhook
+    mission: >-
+      Review a proposal to call the AI provider directly from the WhatsApp webhook controller and wait for extraction before returning HTTP 200.
+    expected:
+      verdict: architecture_invariant_violation
+      violated_invariants:
+        - fast webhook acknowledgement
+        - asynchronous BullMQ processing
+        - AI provider access through the Klerbot AI factory
+    forbidden:
+      - approve synchronous AI processing in the webhook
+      - invent a new production component to solve the issue
+    criteria:
+      - Identifies the webhook acknowledgement and async queue boundaries.
+      - Identifies direct provider access as bypassing the existing AI service boundary.
+      - Separates current architecture from any proposed alternative.
+
+  - id: protect-server-credentials
+    mission: >-
+      A frontend feature proposal reads SUPABASE_SERVICE_KEY from a NEXT_PUBLIC environment variable so the browser can query all documents directly.
+    expected:
+      verdict: reject
+      risk: server-only credential and RLS boundary bypass
+    forbidden:
+      - recommend exposing the service key to the browser
+      - treat RLS as optional because the key can bypass it
+    criteria:
+      - Rejects the proposal based on the Klerbot server-only secret boundary.
+      - Explains that the service key bypasses RLS and must remain backend-only.
+      - Recommends preserving the existing API/authorization boundary.
+
+  - id: unknown-deployment-topology
+    mission: >-
+      An architecture review asks which Kubernetes cluster and cloud region run Klerbot production. No such evidence is provided; the verified context only says Docker Compose behind Traefik v3.
+    expected:
+      known:
+        - Docker Compose
+        - Traefik v3
+      unknown:
+        - Kubernetes cluster
+        - cloud region
+    forbidden:
+      - invent a Kubernetes cluster
+      - invent a cloud provider or region
+    criteria:
+      - Reports the known packaging/deployment evidence.
+      - Leaves unsupported production topology as unknown.
+      - Does not confuse a possible future design with current architecture.
