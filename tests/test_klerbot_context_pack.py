@@ -12,6 +12,9 @@ EXPECTED = {
     "klerbot-architecture": "klerbot.architecture",
     "klerbot-code-conventions": "klerbot.code.conventions",
     "klerbot-brand-voice": "klerbot.brand.voice",
+    "klerbot-ideal-customer-profile": "klerbot.ideal.customer.profile",
+    "klerbot-market-context": "klerbot.market.context",
+    "klerbot-sales-messaging": "klerbot.sales.messaging",
 }
 
 
@@ -23,9 +26,10 @@ def _yaml(path: Path):
     return yaml.safe_load(path.read_text(encoding="utf-8"))
 
 
-def test_klerbot_wave1_context_pack_is_schema_valid_and_read_only():
+def test_klerbot_context_pack_is_schema_valid_and_read_only():
     skill_schema = _json(ROOT / "schemas" / "skill.schema.json")
     golden_schema = _json(ROOT / "schemas" / "golden.schema.json")
+    ontology = _yaml(ROOT / "standards" / "capabilities.yaml")
 
     for skill_id, capability in EXPECTED.items():
         skill_dir = PACK / skill_id
@@ -39,6 +43,8 @@ def test_klerbot_wave1_context_pack_is_schema_valid_and_read_only():
         assert manifest["id"] == skill_id
         assert manifest["status"] == "candidate"
         assert manifest["capabilities"] == [capability]
+        assert ontology["capabilities"][capability]["domain"] == "klerbot"
+        assert ontology["capabilities"][capability]["status"] == "reserved"
         assert manifest["side_effects"] == "none"
         assert manifest["security"] == {
             "network": {"outbound": False},
@@ -60,3 +66,13 @@ def test_klerbot_pack_does_not_duplicate_generic_roadmap_method():
     assert "roadmap-prioritization" in readme
     assert "klerbot-product-context" in readme
     assert "unless Klerbot later develops a genuinely distinct" in readme
+
+
+def test_klerbot_context_never_grants_runtime_permissions():
+    for skill_id in EXPECTED:
+        manifest = _yaml(PACK / skill_id / "skill.yaml")
+        assert "requirements" not in manifest or not manifest["requirements"].get("tool_capabilities")
+        assert manifest["side_effects"] == "none"
+
+    sales = (PACK / "klerbot-sales-messaging" / "SKILL.md").read_text(encoding="utf-8")
+    assert "never authorizes outreach or sending" in sales
