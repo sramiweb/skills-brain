@@ -33,7 +33,7 @@ relationships:
     - lead-qualification
     - email-personalization
     - product-discovery
-    - growth-funnel-analysis
+    - funnel-analysis
     - klerbot-product-context
 evaluation:
   golden_tasks: required
